@@ -11,7 +11,7 @@ mod config;
 pub const PROCESS_NAME: &str = "modernwarfare.exe";
 pub const CHEAT_TICKRATE: u64 = 1;
 
-const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
+const LOG_LEVEL: LevelFilter = LevelFilter::Trace;
 
 fn run() -> Result<(), Box<dyn Error>> {
     // Initialize the logger

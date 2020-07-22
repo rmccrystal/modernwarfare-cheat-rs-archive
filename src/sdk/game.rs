@@ -1,9 +1,12 @@
 use memlib::memory::*;
+use super::encryption;
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
 pub struct Game {
-    pub base_address: Address
+    pub base_address: Address,
+    client_info_base: Address,
+    base_offset: Address
 }
 
 impl Game {
@@ -17,8 +20,13 @@ impl Game {
             .ok_or_else(|| format!("Error getting module {}", crate::PROCESS_NAME))?
             .base_address;
 
+        let client_info_base = encryption::get_client_info_address(base_address)?;
+        let base_offset = encryption::get_client_info_base_address(base_address)?;
+
         Ok(Self {
-            base_address
+            base_address,
+            client_info_base,
+            base_offset
         })
     }
 }

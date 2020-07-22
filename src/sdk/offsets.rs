@@ -14,7 +14,7 @@ pub mod client_info {
     pub const DISPLACEMENT: Address = 0x15;
 }
 
-pub mod base {
+pub mod client_info_base {
     use memlib::memory::Address;
 
     pub const BASE_OFFSET: Address = 0x97AF8;
