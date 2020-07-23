@@ -21,7 +21,7 @@ impl Game {
             .base_address;
 
         let client_info_base = encryption::get_client_info_address(base_address)?;
-        let base_offset = encryption::get_client_info_base_address(base_address)?;
+        let base_offset = encryption::get_client_base_address(base_address)?;
 
         Ok(Self {
             base_address,

@@ -39,18 +39,16 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     Ok(decrypted_address.0)
 }
 
-pub fn get_client_info_base_address(game_base_address: Address) -> Result<Address> {
+pub fn get_client_base_address(game_base_address: Address) -> Result<Address> {
     let client_info_address = get_client_info_address(game_base_address)?;
 
-    let encrypted_address = read_memory(client_info_address + offsets::client_info_base::BASE_OFFSET);
-
+    let encrypted_address = read_memory(client_info_address + offsets::client_base::BASE_OFFSET);
     if encrypted_address == 0 {
         return Err("Could not find the encrypted client_info_base address".into());
     }
-
     debug!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
 
-    let last_key = get_last_key(game_base_address, offsets::client_info_base::BASE_REVERSED_ADDR, offsets::client_info_base::BASE_DISPLACEMENT)
+    let last_key = get_last_key(game_base_address, offsets::client_base::BASE_REVERSED_ADDR, offsets::client_base::BASE_DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting base_address")?;
 
     let not_peb = get_not_peb();
@@ -59,15 +57,18 @@ pub fn get_client_info_base_address(game_base_address: Address) -> Result<Addres
     let last_key                = Wrapping(last_key);
     let not_peb                 = Wrapping(not_peb);
 
-    encrypted_address ^= (encrypted_address >> 0x1C);
-    encrypted_address ^= (encrypted_address >> 0x38);
-    encrypted_address *= last_key;
-    encrypted_address ^= Wrapping(0xC8755D9A588BA9BF);
-    encrypted_address *= Wrapping(0xAEABFCF6626F055B);
+    // Actual decryption
 
-    let mut rax = Wrapping(!(game_base_address + 0xB278));
-    rax += not_peb;
-    encrypted_address += rax;
+    encrypted_address ^= (encrypted_address >> 0x1E);
+    encrypted_address ^= (encrypted_address >> 0x3C);
+    let mut rcx = not_peb;
+    rcx = !rcx;
+    encrypted_address ^= rcx;
+    encrypted_address ^= Wrapping(game_base_address + 0x4244D8BD);
+    encrypted_address += Wrapping(0x36CF5A33B9962C9B);
+    encrypted_address *= last_key;
+    encrypted_address *= Wrapping(0x6032E6DF0F6B4331);
+    encrypted_address -= Wrapping(0x5C38D3E559DDA29B);
 
     info!("Found decrypted client_info_base address: 0x{:X}", encrypted_address.0);
 
