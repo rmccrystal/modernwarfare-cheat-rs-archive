@@ -1,31 +1,31 @@
 pub mod entity {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x112D0598;
-    pub const REVERSED_ADDRESS: Address = 0x4EAF1F5;
-    pub const DISPLACEMENT: Address = 0x13;
+    pub const ENCRYPTED_PTR: Address = 0x11344618;
+    pub const REVERSED_ADDRESS: Address = 0x4F23200;
+    pub const DISPLACEMENT: Address = 0x9;
 }
 
 pub mod client_info {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x112D18B8;
-    pub const REVERSED_ADDRESS: Address = 0x4EAF2B4;
-    pub const DISPLACEMENT: Address = 0x15;
+    pub const ENCRYPTED_PTR: Address = 0x11345938;
+    pub const REVERSED_ADDRESS: Address = 0x4F2327E;
+    pub const DISPLACEMENT: Address = 0x11;
 }
 
 pub mod client_info_base {
     use memlib::memory::Address;
 
-    pub const BASE_OFFSET: Address = 0x97AF8;
-    pub const BASE_REVERSED_ADDR: Address = 0x4EAF2E5;
-    pub const BASE_DISPLACEMENT: Address = 0x17;
+    pub const BASE_OFFSET: Address = 0x97B48;
+    pub const BASE_REVERSED_ADDR: Address = 0x4F2329F;
+    pub const BASE_DISPLACEMENT: Address = 0xD;
 }
 
 pub mod bones {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0xF5E3578;
-    pub const REVERSED_ADDRESS: Address = 0x4EAF40F;
-    pub const DISPLACEMENT: Address = 0x13;
+    pub const ENCRYPTED_PTR: Address = 0xF657608;
+    pub const REVERSED_ADDRESS: Address = 0x4F2338C;
+    pub const DISPLACEMENT: Address = 0x7;
 }

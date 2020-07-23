@@ -3,16 +3,14 @@ use log::*;
 use std::num::Wrapping;
 
 use super::offsets;
-use super::*;
-use std::ops::BitXorAssign;
 
 pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     // Get the encrypted base address
-    let encrypted_client_info_address: Address = read_memory(game_base_address + offsets::client_info::ENCRYPTED_PTR);
-    if encrypted_client_info_address == 0 {
+    let encrypted_address: Address = read_memory(game_base_address + offsets::client_info::ENCRYPTED_PTR);
+    if encrypted_address == 0 {
         return Err("Could not find encrypted base address for client_info".into());
     }
-    debug!("Found encrypted client_info address: 0x{:X}", encrypted_client_info_address);
+    debug!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
     // Get last_key
     let last_key = get_last_key(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)
@@ -22,28 +20,23 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     let not_peb = get_not_peb();
     trace!("not_peb: 0x{:X}", not_peb);
 
-    let rdx = !(game_base_address + 0x472047FF);
+    let mut decrypted_address = Wrapping(encrypted_address);
+    let mut last_key          = Wrapping(last_key);
+    let mut not_peb           = Wrapping(not_peb);
 
-    // Set all the variables to Wrap
-    let mut rdx                         = Wrapping(rdx);
-    let not_peb                         = Wrapping(not_peb);
-    let encrypted_client_info_address   = Wrapping(encrypted_client_info_address);
+    decrypted_address *= last_key;
+    decrypted_address ^= (decrypted_address >> 0x1D);
+    decrypted_address ^= (decrypted_address >> 0x3A);
+    decrypted_address -= Wrapping(0x1505400C26E50FA6);
+    decrypted_address ^= (decrypted_address >> 0x22);
+    decrypted_address *= Wrapping(0xBF8507FACC9977DB);
+    decrypted_address += not_peb;
 
-    rdx ^= not_peb;
-    rdx += not_peb;
-    rdx += encrypted_client_info_address;
-    rdx *= Wrapping(0x84284B9805F27C2D);
-    rdx ^= (rdx >> 0x8);
-    rdx ^= (rdx >> 0x10);
-    rdx ^= (rdx >> 0x20);
+    info!("Found decrypted client_info address: 0x{:X}", decrypted_address.0);
 
-    let mut decrypted_client_info_address = Wrapping(last_key);
-    decrypted_client_info_address *= rdx;
-    decrypted_client_info_address += Wrapping(0x282638D0F2256416);
+    // println!("{:?}", read_bytes(decrypted_address.0, 2000));
 
-    info!("Found decrypted client_info address: 0x{:X}", decrypted_client_info_address.0);
-
-    Ok(decrypted_client_info_address.0)
+    Ok(decrypted_address.0)
 }
 
 pub fn get_client_info_base_address(game_base_address: Address) -> Result<Address> {
