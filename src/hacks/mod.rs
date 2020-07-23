@@ -17,6 +17,16 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
         // Run the loop `CHEAT_TICKRATE` times per second
         timer.wait();
 
+        let characters = game.get_character_array();
+        if characters.is_none() {
+            debug!("no characters");
+            continue;
+        }
+        let characters = characters.unwrap();
+        for character in characters {
+            debug!("{:?}", character.get_origin());
+        }
+
         // (main cheat code)
     }
 }

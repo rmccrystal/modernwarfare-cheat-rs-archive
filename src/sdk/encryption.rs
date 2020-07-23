@@ -10,7 +10,7 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     if encrypted_address == 0 {
         return Err("Could not find encrypted base address for client_info".into());
     }
-    debug!("Found encrypted client_info address: 0x{:X}", encrypted_address);
+    trace!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
     // Get last_key
     let last_key = get_last_key(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)
@@ -34,19 +34,15 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
 
     info!("Found decrypted client_info address: 0x{:X}", decrypted_address.0);
 
-    // println!("{:?}", read_bytes(decrypted_address.0, 2000));
-
     Ok(decrypted_address.0)
 }
 
-pub fn get_client_base_address(game_base_address: Address) -> Result<Address> {
-    let client_info_address = get_client_info_address(game_base_address)?;
-
+pub fn get_client_base_address(game_base_address: Address, client_info_address: Address) -> Result<Address> {
     let encrypted_address = read_memory(client_info_address + offsets::client_base::BASE_OFFSET);
     if encrypted_address == 0 {
         return Err("Could not find the encrypted client_info_base address".into());
     }
-    debug!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
+    trace!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
 
     let last_key = get_last_key(game_base_address, offsets::client_base::BASE_REVERSED_ADDR, offsets::client_base::BASE_DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting base_address")?;
