@@ -32,7 +32,7 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     decrypted_address *= Wrapping(0xBF8507FACC9977DB);
     decrypted_address += not_peb;
 
-    info!("Found decrypted client_info address: 0x{:X}", decrypted_address.0);
+    trace!("Found decrypted client_info address: 0x{:X}", decrypted_address.0);
 
     Ok(decrypted_address.0)
 }
@@ -66,7 +66,7 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     encrypted_address *= Wrapping(0x6032E6DF0F6B4331);
     encrypted_address -= Wrapping(0x5C38D3E559DDA29B);
 
-    info!("Found decrypted client_info_base address: 0x{:X}", encrypted_address.0);
+    trace!("Found decrypted client_info_base address: 0x{:X}", encrypted_address.0);
 
     Ok(encrypted_address.0)
 }

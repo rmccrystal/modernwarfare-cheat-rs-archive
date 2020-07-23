@@ -3,6 +3,12 @@ use crate::sdk::*;
 
 use log::*;
 use memlib::util::LoopTimer;
+use std::io::Read;
+use memlib::memory::Address;
+use crate::sdk::structs::character_info;
+use memlib::math::Angles2;
+
+mod aimbot;
 
 // The main loop of the cheat
 // Returns an error if there is an error with any of the tick functions
@@ -13,20 +19,24 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     // Create a timer from the tickrate of the cheat
     let mut timer = LoopTimer::new(crate::CHEAT_TICKRATE);
 
+    println!("{:X}", std::mem::size_of::<character_info>());
+
     loop {
-        // Run the loop `CHEAT_TICKRATE` times per second
         timer.wait();
 
-        let characters = game.get_character_array();
-        if characters.is_none() {
-            debug!("no characters");
-            continue;
-        }
-        let characters = characters.unwrap();
-        for character in characters {
-            debug!("{:?}", character.get_origin());
+        // dbg!(game.get_camera());
+        for player in game.get_players().unwrap() {
+            info!("{}: {}", player.name, player.character_id);
         }
 
-        // (main cheat code)
+        // println!("Enter address: ");
+        // let stdin = std::io::stdin();
+        // let mut buff = String::new();
+        // stdin.read_line(&mut buff).unwrap();
+        // let buff: u64 = buff.parse().unwrap();
+
+        // let buff = 2681898626048;
+
+        // memlib::memory::new_interactive_scan::<f32>((buff, buff + 0x3A60), true);
     }
 }

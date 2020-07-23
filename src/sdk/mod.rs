@@ -1,7 +1,7 @@
 mod game;
 mod encryption;
 mod offsets;
-mod structs;
+pub mod structs;
 mod player;
 
 pub use game::*;
