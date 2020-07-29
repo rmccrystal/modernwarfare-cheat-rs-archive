@@ -1,4 +1,4 @@
-mod bone;
+pub mod bone;
 mod game;
 mod encryption;
 mod offsets;

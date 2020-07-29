@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 memlib = { path = "../memlib-rs" }
+win_key_codes = "0.1.2"
 log = "*"

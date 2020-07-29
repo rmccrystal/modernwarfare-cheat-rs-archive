@@ -35,6 +35,16 @@ impl Game {
         Some(players)
     }
 
+    pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
+        let players = self.get_players()?;
+        let player = players.iter().find(|player| player.character_id == id);
+        if let Some(p) = player {
+            return Some(p.clone())
+        }
+
+        None
+    }
+
     pub fn get_camera_position(&self) -> Vector3 {
         let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
         read_memory(camera_addr + offsets::CAMERA_OFFSET)
@@ -129,4 +139,9 @@ impl Game {
         }
         bone_base.ok()
     }
+}
+
+// Converts units to in game meters
+pub fn units_to_m(units: f32) -> f32 {
+    units / 39.5
 }

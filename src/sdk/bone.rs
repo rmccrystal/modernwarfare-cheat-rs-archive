@@ -4,6 +4,13 @@ use log::*;
 use super::{offsets};
 use crate::sdk::Game;
 
+#[repr(i32)]
+#[derive(Clone, Copy, Debug)]
+pub enum Bone {
+    Head = 192,
+    HeadAlternate = 8,
+}
+
 pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: i32) -> Result<Vector3, Box<dyn std::error::Error>> {
     let bone_ptr_index: u16 = read_memory(game.base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
     trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);

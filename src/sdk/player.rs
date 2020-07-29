@@ -2,6 +2,8 @@ use super::structs::{character_info, name_t};
 use memlib::math::{Vector3, Angles2};
 use memlib::memory::{read_memory, Address};
 use super::{Game, bone};
+use crate::sdk::bone::Bone;
+use crate::sdk::structs::CharacterStance;
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -9,7 +11,7 @@ pub struct Player {
     pub origin: Vector3,
     pub team: i32,
     pub character_id: i32,
-
+    pub stance: CharacterStance
 }
 
 impl Player {
@@ -19,11 +21,12 @@ impl Player {
             character_id: char_info.entity_num,
             team: char_info.team,
             name: game.get_name_struct(char_info.entity_num as u32).get_name(),
+            stance: char_info.stance,
         }
     }
 
-    pub fn get_bone_position(&self, game: &Game, bone_index: i32) -> Result<Vector3, Box<dyn std::error::Error>> {
-        bone::get_bone_position(&game, self.character_id, bone_index)
+    pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
+        bone::get_bone_position(&game, self.character_id, unsafe { std::mem::transmute(bone_index)})
     }
 }
 
@@ -33,8 +36,8 @@ impl character_info {
         read_memory(self.position_pointer + 0x40)
     }
 
-    pub fn get_bone_position(&self, game: &Game, bone_index: i32) -> Result<Vector3, Box<dyn std::error::Error>> {
-        bone::get_bone_position(&game, self.entity_num, bone_index)
+    pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
+        bone::get_bone_position(&game, self.entity_num, unsafe { std::mem::transmute(bone_index)})
     }
 }
 

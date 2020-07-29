@@ -1,5 +1,6 @@
 use memlib::logger::MinimalLogger;
 use memlib::memory;
+use memlib::system;
 
 use log::*;
 use std::error::Error;
@@ -9,13 +10,16 @@ mod hacks;
 mod config;
 
 pub const PROCESS_NAME: &str = "modernwarfare.exe";
-pub const CHEAT_TICKRATE: u64 = 1;
+pub const CHEAT_TICKRATE: u64 = 60;
 
 const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
 
 fn run() -> Result<(), Box<dyn Error>> {
     // Initialize the logger
     MinimalLogger::init(LOG_LEVEL)?;
+
+    // Init system by connecting to RPC running on guest
+    system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
 
     // Create a handle to the game
     let handle = memory::Handle::new(PROCESS_NAME)?;
