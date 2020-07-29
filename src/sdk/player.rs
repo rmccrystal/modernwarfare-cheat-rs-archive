@@ -7,7 +7,9 @@ use super::{Game, bone};
 pub struct Player {
     pub name: String,
     pub origin: Vector3,
+    pub team: i32,
     pub character_id: i32,
+
 }
 
 impl Player {
@@ -15,6 +17,7 @@ impl Player {
         Self {
             origin: char_info.get_position(),
             character_id: char_info.entity_num,
+            team: char_info.team,
             name: game.get_name_struct(char_info.entity_num as u32).get_name(),
         }
     }

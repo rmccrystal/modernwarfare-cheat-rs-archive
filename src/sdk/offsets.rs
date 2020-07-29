@@ -2,9 +2,14 @@ use memlib::memory::Address;
 
 pub const NAME_ARRAY: Address = 0x111B8E58;
 pub const NAME_LIST_OFFSET: Address = 0x4C70;
-pub const CAMERA_POINTER_OFFSET: Address = 0xE701820;
+
+pub const CAMERA_POINTER: Address = 0xE701820;
 pub const CAMERA_OFFSET: Address = 0x1D8;
+
 pub const INDEX_ARRAY: Address = 0xF4BC240;
+
+pub const LOCAL_INDEX_POINTER: Address = 0x20878;
+pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
 pub mod entity {
     use memlib::memory::Address;

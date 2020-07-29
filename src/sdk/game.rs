@@ -5,6 +5,7 @@ use super::structs;
 use super::offsets;
 use super::player::Player;
 use memlib::math::{Angles2, Vector3};
+use crate::sdk::encryption::get_client_base_address;
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
@@ -35,13 +36,18 @@ impl Game {
     }
 
     pub fn get_camera_position(&self) -> Vector3 {
-        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER_OFFSET);
+        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
         read_memory(camera_addr + offsets::CAMERA_OFFSET)
     }
 
     pub fn get_camera_angles(&self) -> Angles2 {
-        unimplemented!();
-        read_memory(self.base_address + 0x8E5CC)
+        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
+        read_memory(camera_addr + offsets::CAMERA_OFFSET + 12)
+    }
+
+    pub fn get_local_player(&self) -> Option<Player> {
+        let local_index = self.get_local_index()?;
+        Some(self.get_players()?.iter().find(|&player| player.character_id == local_index)?.clone())
     }
 }
 
@@ -89,6 +95,11 @@ impl Game {
 
         let character_id = character_id as u64;
         read_memory(name_array_base + offsets::NAME_LIST_OFFSET + ((character_id + character_id * 8) << 4))
+    }
+
+    pub fn get_local_index(&self) -> Option<i32> {
+        let ptr: Address = read_memory(self.get_client_info_base()? + offsets::LOCAL_INDEX_POINTER);
+        Some(read_memory(ptr + offsets::LOCAL_INDEX_OFFSET))
     }
 }
 

@@ -8,7 +8,7 @@ use memlib::memory::Address;
 use crate::sdk::structs::character_info;
 use memlib::math::Angles2;
 
-mod aimbot;
+pub mod aimbot;
 
 // The main loop of the cheat
 // Returns an error if there is an error with any of the tick functions
@@ -24,14 +24,12 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         timer.wait();
 
-        for player in game.get_players().unwrap() {
-            if player.name == "draven" {
-                dbg!(&player.origin);
-                for i in 1..=250 {
-                    info!("{}: {:?}", i, player.get_bone_position(&game, i));
-                }
-            }
-        }
+        aimbot::aimbot(&game, &config.aimbot_config);
+
+        // for player in game.get_players().unwrap() {
+        //     if player.name == "draven" {
+        //     }
+        // }
 
         // println!("Enter address: ");
         // let stdin = std::io::stdin();
