@@ -4,7 +4,7 @@ use super::encryption;
 use super::structs;
 use super::offsets;
 use super::player::Player;
-use memlib::math::Angles2;
+use memlib::math::{Angles2, Vector3};
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
@@ -34,15 +34,14 @@ impl Game {
         Some(players)
     }
 
-    pub fn get_camera(&self) -> Angles2 {
-        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_OFFSET);
-        read_memory(camera_addr + 0x1E4)
+    pub fn get_camera_position(&self) -> Vector3 {
+        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER_OFFSET);
+        read_memory(camera_addr + offsets::CAMERA_OFFSET)
     }
 
-    pub fn set_camera(&self, value: Angles2) {
+    pub fn get_camera_angles(&self) -> Angles2 {
         unimplemented!();
-        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_OFFSET);
-        write_memory(camera_addr + 0x1E4, value)
+        read_memory(self.base_address + 0x8E5CC)
     }
 }
 
@@ -95,7 +94,7 @@ impl Game {
 
 // Addresses
 impl Game {
-    fn get_client_info_base(&self) -> Option<Address> {
+    pub fn get_client_info_base(&self) -> Option<Address> {
         let client_info = encryption::get_client_info_address(self.base_address);
         if let Err(error) = &client_info {
             warn!("Failed to find client_info address with error: {}", error)
@@ -103,12 +102,20 @@ impl Game {
         client_info.ok()
     }
 
-    fn get_character_array_base(&self) -> Option<Address> {
+    pub fn get_character_array_base(&self) -> Option<Address> {
         let client_info = self.get_client_info_base()?;
         let client_base = encryption::get_client_base_address(self.base_address, client_info);
         if let Err(error) = &client_base {
             warn!("Failed to find client_base address with error: {}", error);
         }
         client_base.ok()
+    }
+
+    pub fn get_bone_base(&self) -> Option<Address> {
+        let bone_base = encryption::get_bone_base_address(self.base_address);
+        if let Err(error) = &bone_base {
+            warn!("Failed to find bone_base address with error: {}", error)
+        }
+        bone_base.ok()
     }
 }

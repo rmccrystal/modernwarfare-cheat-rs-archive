@@ -4,21 +4,20 @@ use memlib::math::{Vector3, Angles2};
 use memlib::memory::{Pointer, Address};
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct character_info
 {
-    unk1: [u8; 0x58],
-    pub entity_num: i32,
-    unk2: [u8; 0x534],
+    unk1: [u8; 32],
     pub position_pointer: Address,
-    unk3: [u8; 0x1CC],
-    pub info_valid: i32,
-    unk4: [u8; 0x28],
+    unk2: [u8; 492],
+    pub entity_num: i32,
+    unk4: [u8; 9608],
     pub team: i32,
-    unk5: [u8; 0x2B20],
+    unk3: [u8; 976],
+    pub info_valid: i32,
+    unk5: [u8; 1036],
     pub stance: CharacterStance,
-    unk6: [u8; 0x75C],
-    pub view_angles: Angles2,
-    unk7: [u8; 0x40],
+    unk6: [u8; 2704],
 } // Size: 0x3A60
 
 #[repr(i32)]

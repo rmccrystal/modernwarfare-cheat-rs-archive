@@ -24,9 +24,13 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         timer.wait();
 
-        // dbg!(game.get_camera());
         for player in game.get_players().unwrap() {
-            info!("{}: {}", player.name, player.character_id);
+            if player.name == "draven" {
+                dbg!(&player.origin);
+                for i in 1..=250 {
+                    info!("{}: {:?}", i, player.get_bone_position(&game, i));
+                }
+            }
         }
 
         // println!("Enter address: ");
