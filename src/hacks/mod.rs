@@ -1,7 +1,6 @@
 use crate::config::Config;
 use crate::sdk::*;
 
-
 use memlib::util::LoopTimer;
 
 
@@ -21,7 +20,7 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     // Create a timer from the tickrate of the cheat
     let mut timer = LoopTimer::new(crate::CHEAT_TICKRATE);
 
-    println!("{:X}", std::mem::size_of::<character_info>());
+    assert_eq!(std::mem::size_of::<character_info>(), offsets::client_base::SIZE);
 
     loop {
         timer.wait();

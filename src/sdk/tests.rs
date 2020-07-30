@@ -2,9 +2,11 @@
 
 use memlib::logger::MinimalLogger;
 use log::LevelFilter;
+use log::*;
 use memlib::memory;
 use memlib::memory::{set_global_handle, get_module, Address};
 use super::encryption;
+use crate::sdk::Game;
 
 static mut BASE_ADDRSES: Option<Address> = None;
 
@@ -36,6 +38,16 @@ fn init() -> Result<Address, Box<dyn std::error::Error>> {
     Ok(base_address)
 }
 
+fn get_game() -> Result<Game, Box<dyn std::error::Error>> {
+    // Initialize the logger
+    MinimalLogger::init(LevelFilter::Trace);
+
+    // Create a handle to the game
+    let handle = memory::Handle::new(crate::PROCESS_NAME)?;
+
+    Game::new(handle)
+}
+
 #[test]
 fn test_decrypt_client_info() {
     let base_address = init().unwrap();
@@ -55,4 +67,16 @@ fn test_decrypt_bone_base() {
     let base_address = init().unwrap();
 
     let _bone_base = encryption::get_bone_base_address(base_address).unwrap();
+}
+
+// must be in game
+#[test]
+fn test_players() {
+    let game = get_game().unwrap();
+
+    let players = game.get_players();
+
+    players.expect("No players were found");
+
+    info!("Players: {:?}", players.unwrap());
 }

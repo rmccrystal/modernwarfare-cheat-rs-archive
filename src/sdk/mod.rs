@@ -1,7 +1,7 @@
 pub mod bone;
 mod game;
 mod encryption;
-mod offsets;
+pub mod offsets;
 mod tests;
 pub mod structs;
 pub(crate) mod player;

@@ -18,11 +18,12 @@ fn run() -> Result<(), Box<dyn Error>> {
     // Initialize the logger
     MinimalLogger::init(LOG_LEVEL)?;
 
+    // Create a handle to the game
+    let handle = memory::Handle::new(PROCESS_NAME)?;
+
     // Init system by connecting to RPC running on guest
     system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
 
-    // Create a handle to the game
-    let handle = memory::Handle::new(PROCESS_NAME)?;
     // Create a game struct from the handle
     let game = sdk::Game::new(handle)?;
 

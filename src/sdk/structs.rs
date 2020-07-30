@@ -17,7 +17,7 @@ pub struct character_info
     pub info_valid: i32,
     unk5: [u8; 1036],
     pub stance: CharacterStance,
-    unk6: [u8; 2704],
+    unk6: [u8; 2832],
 } // Size: 0x3A60
 
 #[repr(i32)]

@@ -20,20 +20,20 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     let not_peb = get_not_peb();
     trace!("not_peb: 0x{:X}", not_peb);
 
-    let mut decrypted_address = Wrapping(encrypted_address);
+    let mut encrypted_address = Wrapping(encrypted_address);
     let last_key          = Wrapping(last_key);
     let not_peb           = Wrapping(not_peb);
 
-    decrypted_address *= Wrapping(0x8AD7433FFF71C77D);
-    decrypted_address ^= Wrapping(0x79CCFC5C12562AAD);
-    decrypted_address -= not_peb ^ Wrapping(game_base_address + 0x78854DD3);
-    decrypted_address += not_peb;
-    decrypted_address *= last_key;
-    decrypted_address ^= Wrapping(encrypted_address >> 0x27);
+    encrypted_address *= 0x8AD7433FFF71C77D.wrap();
+    encrypted_address ^= 0x79CCFC5C12562AAD.wrap();
+    encrypted_address -= not_peb ^ (game_base_address + 0x78854DD3).wrap();
+    encrypted_address += not_peb;
+    encrypted_address *= last_key;
+    encrypted_address ^= encrypted_address >> 0x27;
 
-    trace!("Found decrypted client_info address: 0x{:X}", decrypted_address.0);
+    trace!("Found decrypted client_info address: 0x{:X}", encrypted_address.0);
 
-    Ok(decrypted_address.0)
+    Ok(encrypted_address.0)
 }
 
 pub fn get_client_base_address(game_base_address: Address, client_info_address: Address) -> Result<Address> {
@@ -128,4 +128,15 @@ fn get_last_key_byteswap(game_base_address: Address, reversed_address_offset: Ad
     }
 
     Some(last_key)
+}
+
+// easy conversion to wrapping
+trait ToWrapping {
+    fn wrap(self) -> Wrapping<u64>;
+}
+
+impl ToWrapping for u64 {
+    fn wrap(self) -> Wrapping<u64> {
+        Wrapping(self)
+    }
 }
