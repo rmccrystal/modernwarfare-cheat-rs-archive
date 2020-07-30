@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::structs::{character_info, name_t};
 use memlib::math::{Vector3};
 use memlib::memory::{read_memory};

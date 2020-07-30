@@ -4,14 +4,13 @@ use memlib::logger::MinimalLogger;
 use log::LevelFilter;
 use log::*;
 use memlib::memory;
-use memlib::memory::{set_global_handle, get_module, Address};
 use super::encryption;
 use crate::sdk::*;
 
 lazy_static::lazy_static! {
     static ref GAME: Game = {
         // Initialize the logger
-        MinimalLogger::init(LevelFilter::Trace);
+        let _ = MinimalLogger::init(LevelFilter::Trace);
 
         // Create a handle to the game
         let handle = memory::Handle::new(crate::PROCESS_NAME).expect("Failed to create a handle to MW");
