@@ -89,7 +89,7 @@ pub fn aimbot(game: &Game, config: &AimbotConfig, ctx: &mut AimbotContext) {
     ctx.aim_lock_player_id = Some(target.character_id);
 
     // Aim at target
-    aim_at(&game, &target, &config, get_aim_position);
+    let _ = aim_at(&game, &target, &config, get_aim_position);
 }
 
 /// Returns the target to aim at or None otherwise
