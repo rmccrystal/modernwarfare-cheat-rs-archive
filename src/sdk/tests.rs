@@ -6,77 +6,69 @@ use log::*;
 use memlib::memory;
 use memlib::memory::{set_global_handle, get_module, Address};
 use super::encryption;
-use crate::sdk::Game;
+use crate::sdk::*;
 
-static mut BASE_ADDRSES: Option<Address> = None;
+lazy_static::lazy_static! {
+    static ref GAME: Game = {
+        // Initialize the logger
+        MinimalLogger::init(LevelFilter::Trace);
 
-/// Inits the global handle and logging and returns the base address (for testing)
-fn init() -> Result<Address, Box<dyn std::error::Error>> {
-    // only init once
-    unsafe {
-        println!("{:?}", BASE_ADDRSES);
-        if BASE_ADDRSES.is_some() {
-            return Ok(BASE_ADDRSES.unwrap())
-        }
-    }
+        // Create a handle to the game
+        let handle = memory::Handle::new(crate::PROCESS_NAME).expect("Failed to create a handle to MW");
 
-    // Initialize the logger
-    MinimalLogger::init(LevelFilter::Trace);
-
-    // Create a handle to the game
-    let handle = memory::Handle::new(crate::PROCESS_NAME)?;
-    set_global_handle(handle);
-
-    // Get the base address or return an error
-    let base_address = get_module(crate::PROCESS_NAME)
-        .ok_or_else(|| format!("Error getting module {}", crate::PROCESS_NAME))?
-        .base_address;
-
-    println!("cache");
-    unsafe { BASE_ADDRSES = Some(base_address); }
-
-    Ok(base_address)
-}
-
-fn get_game() -> Result<Game, Box<dyn std::error::Error>> {
-    // Initialize the logger
-    MinimalLogger::init(LevelFilter::Trace);
-
-    // Create a handle to the game
-    let handle = memory::Handle::new(crate::PROCESS_NAME)?;
-
-    Game::new(handle)
+        Game::new(handle).unwrap()
+    };
 }
 
 #[test]
-fn test_decrypt_client_info() {
-    let base_address = init().unwrap();
+fn decrypt_client_info() {
+    let base_address = GAME.base_address;
     let _client_info = encryption::get_client_info_address(base_address).unwrap();
 }
 
 #[test]
-fn test_decrypt_client_base() {
-    let base_address = init().unwrap();
+fn decrypt_client_base() {
+    let base_address = GAME.base_address;
 
     let client_info = encryption::get_client_info_address(base_address).unwrap();
     let _client_base = encryption::get_client_base_address(base_address, client_info).unwrap();
 }
 
 #[test]
-fn test_decrypt_bone_base() {
-    let base_address = init().unwrap();
+fn decrypt_bone_base() {
+    let base_address = GAME.base_address;
 
     let _bone_base = encryption::get_bone_base_address(base_address).unwrap();
 }
 
 // must be in game
 #[test]
-fn test_players() {
-    let game = get_game().unwrap();
+fn players() {
+    let players = GAME.get_players();
 
-    let players = game.get_players();
+    let players = players.expect("No players were found");
 
-    players.expect("No players were found");
+    info!("Players: {:?}", players);
+}
 
-    info!("Players: {:?}", players.unwrap());
+// Tests if the character_info_t size matches the one in the offsets
+#[test]
+fn character_info_t_size() {
+    assert_eq!(std::mem::size_of::<structs::character_info>(), offsets::client_base::SIZE);
+}
+
+#[test]
+fn test_camera() {
+    assert!(!GAME.get_camera_position().is_zero());
+    assert!(!GAME.get_camera_angles().is_zero());
+}
+
+#[test]
+fn get_local_player() {
+    error!("test");
+    warn!("test");
+    info!("test");
+    debug!("test");
+    trace!("test");
+    GAME.get_local_player().unwrap();
 }

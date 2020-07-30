@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::hacks::aimbot::AimbotConfig;
 use memlib::system;
 

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use memlib::math::Vector3;
 use memlib::memory::{read_memory, Address};
 use log::*;

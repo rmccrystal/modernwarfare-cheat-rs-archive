@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use memlib::memory::Address;
 
 pub const NAME_ARRAY: Address = 0x111B8E58;
