@@ -4,7 +4,7 @@ use crate::sdk::*;
 use memlib::util::LoopTimer;
 
 
-use crate::sdk::structs::character_info;
+
 
 
 pub mod aimbot;
