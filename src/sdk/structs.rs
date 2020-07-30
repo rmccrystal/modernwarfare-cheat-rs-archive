@@ -1,7 +1,7 @@
 #![allow(non_camel_case_types, dead_code)]
 
-use memlib::math::{Vector3, Angles2};
-use memlib::memory::{Pointer, Address};
+
+use memlib::memory::{Address};
 
 #[repr(C)]
 #[derive(Clone)]

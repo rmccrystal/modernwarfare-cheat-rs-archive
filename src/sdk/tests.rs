@@ -39,7 +39,7 @@ fn init() -> Result<Address, Box<dyn std::error::Error>> {
 #[test]
 fn test_decrypt_client_info() {
     let base_address = init().unwrap();
-    let client_info = encryption::get_client_info_address(base_address).unwrap();
+    let _client_info = encryption::get_client_info_address(base_address).unwrap();
 }
 
 #[test]
@@ -47,12 +47,12 @@ fn test_decrypt_client_base() {
     let base_address = init().unwrap();
 
     let client_info = encryption::get_client_info_address(base_address).unwrap();
-    let client_base = encryption::get_client_base_address(base_address, client_info).unwrap();
+    let _client_base = encryption::get_client_base_address(base_address, client_info).unwrap();
 }
 
 #[test]
 fn test_decrypt_bone_base() {
     let base_address = init().unwrap();
 
-    let bone_base = encryption::get_bone_base_address(base_address).unwrap();
+    let _bone_base = encryption::get_bone_base_address(base_address).unwrap();
 }

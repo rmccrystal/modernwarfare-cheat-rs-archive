@@ -1,5 +1,5 @@
 use memlib::math::Vector3;
-use memlib::memory::{read_memory, Address, read_bytes};
+use memlib::memory::{read_memory, Address};
 use log::*;
 use super::{offsets};
 use crate::sdk::Game;

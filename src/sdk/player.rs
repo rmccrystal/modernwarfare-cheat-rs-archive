@@ -1,6 +1,6 @@
 use super::structs::{character_info, name_t};
-use memlib::math::{Vector3, Angles2};
-use memlib::memory::{read_memory, Address};
+use memlib::math::{Vector3};
+use memlib::memory::{read_memory};
 use super::{Game, bone};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;

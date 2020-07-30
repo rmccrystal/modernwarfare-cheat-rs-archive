@@ -1,12 +1,12 @@
 use crate::config::Config;
 use crate::sdk::*;
 
-use log::*;
+
 use memlib::util::LoopTimer;
-use std::io::Read;
-use memlib::memory::Address;
+
+
 use crate::sdk::structs::character_info;
-use memlib::math::Angles2;
+
 
 pub mod aimbot;
 
@@ -14,7 +14,7 @@ pub mod aimbot;
 // Returns an error if there is an error with any of the tick functions
 pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     // Use the default config. We can change this later to load from a file
-    let mut config = Config::default();
+    let config = Config::default();
 
     let mut aimbot_context = aimbot::AimbotContext::new();
 

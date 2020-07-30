@@ -5,7 +5,7 @@ use super::structs;
 use super::offsets;
 use super::player::Player;
 use memlib::math::{Angles2, Vector3};
-use crate::sdk::encryption::get_client_base_address;
+
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.

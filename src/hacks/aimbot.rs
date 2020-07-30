@@ -153,12 +153,12 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
 
 fn aim_at(game: &Game, target: &Player, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3) -> Result<(), Box<dyn std::error::Error>> {
     // let target_position = target.get_bone_position(&game, config.bone)?;
-    let mut target_position = get_aim_position(&target);
+    let target_position = get_aim_position(&target);
 
     let local_position = game.get_camera_position();
     let local_view_angles = game.get_camera_angles();
 
-    let mut delta = math::calculate_relative_angles(local_position, target_position, &local_view_angles);
+    let delta = math::calculate_relative_angles(local_position, target_position, &local_view_angles);
 
     debug!("Aiming at {}\t({}m)\t({}°)\t({:?})",
            target.name,
