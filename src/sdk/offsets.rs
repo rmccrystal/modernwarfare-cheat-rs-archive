@@ -2,15 +2,18 @@
 
 use memlib::memory::Address;
 
-pub const NAME_ARRAY: Address = 0x111B8E58;
+pub const IN_GAME: Address = 0x10F4EAC8;
+
+pub const NAME_ARRAY: Address = 0x111CDFD8;
 pub const NAME_LIST_OFFSET: Address = 0x4C70;
 
-pub const CAMERA_POINTER: Address = 0xE701820;
+pub const CAMERA_POINTER: Address = 0x0E716820;
 pub const CAMERA_OFFSET: Address = 0x1D8;
 
+// not updated
 pub const INDEX_ARRAY: Address = 0xF4BC240;
 
-pub const LOCAL_INDEX_POINTER: Address = 0x20878;
+pub const LOCAL_INDEX_POINTER: Address = 0x23F20;
 pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
 pub mod entity {

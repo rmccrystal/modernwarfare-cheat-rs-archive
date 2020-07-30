@@ -7,6 +7,7 @@ use super::structs;
 use super::offsets;
 use super::player::Player;
 use memlib::math::{Angles2, Vector3};
+use crate::sdk::structs::character_info;
 
 
 /// A struct containing information and methods for the game.
@@ -32,19 +33,20 @@ impl Game {
     }
 
     pub fn get_players(&self) -> Option<Vec<Player>> {
+        if !self.in_game() {
+            return None;
+        }
         let char_array = self.get_character_array()?;
         let players = char_array.iter().map(|c| Player::new(&self, c)).collect();
         Some(players)
     }
 
     pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
-        let players = self.get_players()?;
-        let player = players.iter().find(|player| player.character_id == id);
-        if let Some(p) = player {
-            return Some(p.clone())
+        let char_info: character_info = read_memory(self.get_character_array_base()? + (id as u64 * std::mem::size_of::<character_info>() as u64));
+        if char_info.info_valid == 0 {
+            return None;
         }
-
-        None
+        Some(Player::new(&self, &char_info))
     }
 
     pub fn get_camera_position(&self) -> Vector3 {
@@ -60,6 +62,10 @@ impl Game {
     pub fn get_local_player(&self) -> Option<Player> {
         let local_index = self.get_local_index()?;
         Some(self.get_players()?.iter().find(|&player| player.character_id == local_index)?.clone())
+    }
+
+    pub fn in_game(&self) -> bool {
+        read_memory::<i32>(self.base_address + offsets::IN_GAME) > 1
     }
 }
 
@@ -111,6 +117,35 @@ impl Game {
 
     pub fn get_local_index(&self) -> Option<i32> {
         let ptr: Address = read_memory(self.get_client_info_base()? + offsets::LOCAL_INDEX_POINTER);
+        let index = {
+            let players = self.get_players().unwrap();
+            let local_pos = self.get_camera_position();
+
+            let mut closest_dist = 9999999.0;
+            let mut closest_player: Option<Player> = None;
+
+            for player in &players {
+                let dist = (player.origin - local_pos).length();
+                print!("{}, ", dist);
+                if dist < closest_dist {
+                    closest_dist = dist;
+                    closest_player = Some(player.clone());
+                }
+            }
+
+            println!("waiting 5 sec");
+            // std::thread::sleep(std::time::Duration::from_millis(5000));
+
+            let closest_player = closest_player.unwrap();
+
+            // for _ in 1..200 {
+            //     std::thread::sleep(std::time::Duration::from_millis(10));
+            //     println!("Closest player Z: {}", closest_player.origin.z);
+            // }
+
+            info!("{:?}, ID {}, dist {}", &closest_player, &closest_player.character_id, &closest_dist);
+        };
+        memlib::memory::scan::new_interactive_scan::<i32>((ptr, ptr + 500), true);
         Some(read_memory(ptr + offsets::LOCAL_INDEX_OFFSET))
     }
 }

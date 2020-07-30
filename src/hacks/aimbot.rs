@@ -24,7 +24,7 @@ pub struct AimbotConfig {
 impl AimbotConfig {
     pub fn default() -> Self {
         Self {
-            team_check: true,
+            team_check: false,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 2.5,
@@ -126,7 +126,11 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
         // let position = position.unwrap();
         let position = get_aim_position(&player);
 
-        if units_to_m((position - local_position).length()) > config.distance_limit {
+        let distance = (position - local_position).length();
+
+        dbg!(&distance);
+
+        if units_to_m(distance) > config.distance_limit {
             continue;
         }
 

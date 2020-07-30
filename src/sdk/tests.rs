@@ -10,7 +10,7 @@ use crate::sdk::*;
 lazy_static::lazy_static! {
     static ref GAME: Game = {
         // Initialize the logger
-        let _ = MinimalLogger::init(LevelFilter::Trace);
+        let _ = MinimalLogger::init(LevelFilter::Debug);
 
         // Create a handle to the game
         let handle = memory::Handle::new(crate::PROCESS_NAME).expect("Failed to create a handle to MW");
@@ -64,10 +64,5 @@ fn test_camera() {
 
 #[test]
 fn get_local_player() {
-    error!("test");
-    warn!("test");
-    info!("test");
-    debug!("test");
-    trace!("test");
     GAME.get_local_player().unwrap();
 }

@@ -24,7 +24,16 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         timer.wait();
 
-        aimbot::aimbot(&game, &config.aimbot_config, &mut aimbot_context);
+        for player in game.get_players().unwrap() {
+            print!("({}, {}), ", player.origin.x, player.origin.y);
+        }
+        println!();
+        dbg!(game.get_camera_position());
+
+        // dbg!(game.get_local_player());
+        // dbg!(game.get_camera_position());
+
+        // aimbot::aimbot(&game, &config.aimbot_config, &mut aimbot_context);
 
         // for player in game.get_players().unwrap() {
         //     if player.name == "draven" {
