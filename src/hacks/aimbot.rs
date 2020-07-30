@@ -25,7 +25,7 @@ impl AimbotConfig {
     pub fn default() -> Self {
         Self {
             team_check: true,
-            bone: Bone::HeadAlternate,
+            bone: Bone::Head,
             fov: 30.0,
             smooth: 2.5,
             keybind: Keybind::WhilePressed(vec![win_key_codes::VK_XBUTTON1]),
