@@ -18,6 +18,7 @@ pub struct AimbotConfig {
     pub aim_lock: bool,
     // Will lock onto the same player until button stops being pressed
     pub distance_limit: f32,    // Distance limit in meteres
+    pub aim_at_downed: bool
 }
 
 impl AimbotConfig {
@@ -30,6 +31,7 @@ impl AimbotConfig {
             keybind: Keybind::WhilePressed(vec![win_key_codes::VK_XBUTTON1]),
             aim_lock: true,
             distance_limit: 400.0,
+            aim_at_downed: false,
         }
     }
 }
@@ -125,6 +127,10 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
         let position = get_aim_position(&player);
 
         if units_to_m((position - local_position).length()) > config.distance_limit {
+            continue;
+        }
+
+        if !config.aim_at_downed && player.stance == CharacterStance::DOWNED {
             continue;
         }
 

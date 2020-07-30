@@ -21,7 +21,7 @@ pub struct character_info
 } // Size: 0x3A60
 
 #[repr(i32)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CharacterStance {
     STANDING = 0,
     CROUCHING = 1,
