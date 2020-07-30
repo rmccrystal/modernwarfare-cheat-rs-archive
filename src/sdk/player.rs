@@ -37,7 +37,7 @@ impl character_info {
     }
 
     pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
-        bone::get_bone_position(&game, self.entity_num, unsafe { std::mem::transmute(bone_index)})
+        bone::get_bone_position(&game, self.entity_num, unsafe { std::mem::trynsmute(bone_index)})
     }
 }
 

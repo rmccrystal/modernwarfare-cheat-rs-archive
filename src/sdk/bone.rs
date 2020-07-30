@@ -4,14 +4,39 @@ use log::*;
 use super::{offsets};
 use crate::sdk::Game;
 
-#[repr(i32)]
+#[repr(u32)]
 #[derive(Clone, Copy, Debug)]
 pub enum Bone {
-    Head = 192,
-    HeadAlternate = 8,
+    Helmet = 8,
+    Head = 7,
+    Neck = 6,
+    Chest = 5,
+    Mid = 4,
+    Tummy = 3,
+    Pelvis = 2,
+
+    RightFoot1 = 21,
+    RightFoot2 = 22,
+    RightFoot3 = 23,
+    RightFoot4 = 24,
+
+    LeftFoot1 = 17,
+    LeftFoot2 = 18,
+    LeftFoot3 = 19,
+    LeftFoot4 = 20,
+
+    LeftHand1 = 13,
+    LeftHand2 = 14,
+    LeftHand3 = 15,
+    LeftHand4 = 16,
+
+    RightHand1 = 9,
+    RightHand2 = 10,
+    RightHand3 = 11,
+    RightHand4 = 12
 }
 
-pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: i32) -> Result<Vector3, Box<dyn std::error::Error>> {
+pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Result<Vector3, Box<dyn std::error::Error>> {
     let bone_ptr_index: u16 = read_memory(game.base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
     trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);
 
