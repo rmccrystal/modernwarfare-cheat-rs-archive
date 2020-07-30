@@ -7,16 +7,16 @@ use memlib::memory::{Address};
 #[derive(Clone)]
 pub struct character_info
 {
-    unk1: [u8; 0x1E8],
+    unk1: [u8; 488],
     pub position_pointer: Address,
-    unk2: [u8; 0x120],
+    unk2: [u8; 292],
     pub info_valid: i32,
     pub entity_num: i32,
-    unk3: [u8; 0x26C4],
+    unk3: [u8; 9924],
     pub stance: CharacterStance,
-    unk4: [u8; 0x830],
+    unk4: [u8; 2096],
     pub team: i32,
-    unk5: [u8; 0x880],
+    unk5: [u8; 2176],
 } // Size: 0x3A60
 
 #[repr(i32)]

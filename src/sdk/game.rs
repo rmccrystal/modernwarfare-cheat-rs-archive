@@ -61,7 +61,7 @@ impl Game {
 
     pub fn get_local_player(&self) -> Option<Player> {
         let local_index = self.get_local_index()?;
-        Some(self.get_players()?.iter().find(|&player| player.character_id == local_index)?.clone())
+        self.get_player_by_id(local_index)
     }
 
     pub fn in_game(&self) -> bool {
@@ -117,35 +117,6 @@ impl Game {
 
     pub fn get_local_index(&self) -> Option<i32> {
         let ptr: Address = read_memory(self.get_client_info_base()? + offsets::LOCAL_INDEX_POINTER);
-        let index = {
-            let players = self.get_players().unwrap();
-            let local_pos = self.get_camera_position();
-
-            let mut closest_dist = 9999999.0;
-            let mut closest_player: Option<Player> = None;
-
-            for player in &players {
-                let dist = (player.origin - local_pos).length();
-                print!("{}, ", dist);
-                if dist < closest_dist {
-                    closest_dist = dist;
-                    closest_player = Some(player.clone());
-                }
-            }
-
-            println!("waiting 5 sec");
-            // std::thread::sleep(std::time::Duration::from_millis(5000));
-
-            let closest_player = closest_player.unwrap();
-
-            // for _ in 1..200 {
-            //     std::thread::sleep(std::time::Duration::from_millis(10));
-            //     println!("Closest player Z: {}", closest_player.origin.z);
-            // }
-
-            info!("{:?}, ID {}, dist {}", &closest_player, &closest_player.character_id, &closest_dist);
-        };
-        memlib::memory::scan::new_interactive_scan::<i32>((ptr, ptr + 500), true);
         Some(read_memory(ptr + offsets::LOCAL_INDEX_OFFSET))
     }
 }

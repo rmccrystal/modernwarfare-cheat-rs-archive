@@ -10,7 +10,7 @@ mod hacks;
 mod config;
 
 pub const PROCESS_NAME: &str = "modernwarfare.exe";
-pub const CHEAT_TICKRATE: u64 = 1;
+pub const CHEAT_TICKRATE: u64 = 60;
 
 const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
 

@@ -57,12 +57,17 @@ fn character_info_t_size() {
 }
 
 #[test]
-fn test_camera() {
+fn camera() {
     assert!(!GAME.get_camera_position().is_zero());
     assert!(!GAME.get_camera_angles().is_zero());
 }
 
 #[test]
 fn get_local_player() {
-    GAME.get_local_player().unwrap();
+    assert_eq!(GAME.get_local_player().unwrap().name, "draven");
+}
+
+#[test]
+fn character_names() {
+    assert_ne!(GAME.get_players().unwrap()[0].name, "");
 }

@@ -24,10 +24,10 @@ pub struct AimbotConfig {
 impl AimbotConfig {
     pub fn default() -> Self {
         Self {
-            team_check: false,
+            team_check: true,
             bone: Bone::Head,
             fov: 30.0,
-            smooth: 2.5,
+            smooth: 1.5,
             keybind: Keybind::WhilePressed(vec![win_key_codes::VK_XBUTTON1]),
             aim_lock: true,
             distance_limit: 400.0,
@@ -127,8 +127,6 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
         let position = get_aim_position(&player);
 
         let distance = (position - local_position).length();
-
-        dbg!(&distance);
 
         if units_to_m(distance) > config.distance_limit {
             continue;
