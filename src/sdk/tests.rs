@@ -71,3 +71,8 @@ fn get_local_player() {
 fn character_names() {
     assert_ne!(GAME.get_players().unwrap()[0].name, "");
 }
+
+#[test]
+fn get_bone_pos() {
+    GAME.get_local_player().unwrap().get_bone_position(&GAME, bone::Bone::Head).unwrap();
+}
