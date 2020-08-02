@@ -3,6 +3,7 @@
 use crate::hacks::aimbot::AimbotConfig;
 use memlib::system;
 use crate::hacks::closest_player::ClosestPlayerConfig;
+use cached::proc_macro::cached;
 
 // The config struct passed in the main hack loop
 pub struct Config {
@@ -22,12 +23,14 @@ impl Config {
     }
 }
 
+#[derive(Clone, Eq, PartialEq)]
 pub enum Keybind {
     AlwaysOn,
     WhilePressed(Vec<i32>), // list of keys
     WhileNotPressed(Vec<i32>),
 }
 
+// TODO: Add caching
 impl Keybind {
     // Returns true if the keystate is enabled
     pub fn get_state(&self) -> bool {
