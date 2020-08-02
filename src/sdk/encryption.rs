@@ -33,9 +33,9 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     encrypted_address = last_key * v1;
     encrypted_address ^= Wrapping(0xE088DE06F8290B73);
     encrypted_address *= Wrapping(0xB042A27BAA05DF1F);
-    encrypted_address ^= (encrypted_address >> 0xC);
-    encrypted_address ^= (encrypted_address >> 0x18);
-    encrypted_address ^= (encrypted_address >> 0x30);
+    encrypted_address ^= encrypted_address >> 0xC;
+    encrypted_address ^= encrypted_address >> 0x18;
+    encrypted_address ^= encrypted_address >> 0x30;
 
     trace!("Found decrypted client_info address: 0x{:X}", encrypted_address.0);
 
@@ -62,20 +62,20 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     // Actual decryption
 
     encrypted_address ^= encrypted_address >> 0x3;
-    encrypted_address ^= (encrypted_address >> 0x6);
-    encrypted_address ^= (encrypted_address >> 0xC);
-    encrypted_address ^= (encrypted_address >> 0x18);
-    encrypted_address ^= (encrypted_address >> 0x30);
+    encrypted_address ^= encrypted_address >> 0x6;
+    encrypted_address ^= encrypted_address >> 0xC;
+    encrypted_address ^= encrypted_address >> 0x18;
+    encrypted_address ^= encrypted_address >> 0x30;
     encrypted_address += (game_base_address + Wrapping(0x13C53E55)) * not_peb;
     encrypted_address *= Wrapping(0x1792C64AA7FF1687);
     encrypted_address += Wrapping(0x0BC92A7E607586AA);
     encrypted_address ^= Wrapping(0x960331A328BC40CF);
     encrypted_address *= last_key;
     encrypted_address += (game_base_address + Wrapping(0x1782)) - not_peb;
-    encrypted_address ^= (encrypted_address >> 0x6);
-    encrypted_address ^= (encrypted_address >> 0xC);
-    encrypted_address ^= (encrypted_address >> 0x18);
-    encrypted_address ^= (encrypted_address >> 0x30);
+    encrypted_address ^= encrypted_address >> 0x6;
+    encrypted_address ^= encrypted_address >> 0xC;
+    encrypted_address ^= encrypted_address >> 0x18;
+    encrypted_address ^= encrypted_address >> 0x30;
 
     trace!("Found decrypted client_info_base address: 0x{:X}", encrypted_address.0);
 
@@ -99,21 +99,21 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     let not_peb                 = Wrapping(not_peb);
     let game_base_address       = Wrapping(game_base_address);
 
-    encrypted_address ^= (encrypted_address >> 0x3);
-    encrypted_address ^= (encrypted_address >> 0x6);
-    encrypted_address ^= (encrypted_address >> 0xC);
-    encrypted_address ^= (encrypted_address >> 0x18);
-    encrypted_address ^= (encrypted_address >> 0x30);
-    encrypted_address += ((game_base_address + Wrapping(0x13C53E55)) * not_peb);
+    encrypted_address ^= encrypted_address >> 0x3;
+    encrypted_address ^= encrypted_address >> 0x6;
+    encrypted_address ^= encrypted_address >> 0xC;
+    encrypted_address ^= encrypted_address >> 0x18;
+    encrypted_address ^= encrypted_address >> 0x30;
+    encrypted_address += (game_base_address + Wrapping(0x13C53E55)) * not_peb;
     encrypted_address *= Wrapping(0x1792C64AA7FF1687);
     encrypted_address += Wrapping(0x0BC92A7E607586AA);
     encrypted_address ^= Wrapping(0x960331A328BC40CF);
     encrypted_address *= last_key;
     encrypted_address += (game_base_address + Wrapping(0x1782)) - not_peb;
-    encrypted_address ^= (encrypted_address >> 0x6);
-    encrypted_address ^= (encrypted_address >> 0xC);
-    encrypted_address ^= (encrypted_address >> 0x18);
-    encrypted_address ^= (encrypted_address >> 0x30);
+    encrypted_address ^= encrypted_address >> 0x6;
+    encrypted_address ^= encrypted_address >> 0xC;
+    encrypted_address ^= encrypted_address >> 0x18;
+    encrypted_address ^= encrypted_address >> 0x30;
 
     trace!("Found decrypted bone_base address: 0x{:X}", encrypted_address.0);
 

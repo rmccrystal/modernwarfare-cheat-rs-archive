@@ -2,8 +2,8 @@ use crate::config::Config;
 use crate::sdk::*;
 
 use memlib::util::LoopTimer;
-use log::*;
-use crate::sdk::structs::CharacterStance;
+
+
 
 pub mod aimbot;
 pub mod closest_player;
