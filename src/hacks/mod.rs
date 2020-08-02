@@ -3,6 +3,7 @@ use crate::sdk::*;
 
 use memlib::util::LoopTimer;
 use log::*;
+use crate::sdk::structs::CharacterStance;
 
 
 pub mod aimbot;
@@ -22,25 +23,33 @@ pub fn hack_loop(game: Game) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         timer.wait();
 
-        // if let Some(players) = game.get_players() {
-        //     let local_player = game.get_local_player().unwrap();
-        //     let mut closest_player: (Option<Player>, f32) = (None, 9999999999.0);
-        //     for player in players {
-        //         if player.character_id == local_player.character_id || player.team == local_player.team {
-        //             continue;
-        //         }
-        //         let distance = units_to_m((player.origin - local_player.origin).length());
-        //         if distance < closest_player.1 {
-        //             closest_player.0 = Some(player.clone());
-        //             closest_player.1 = distance;
-        //         }
-        //     }
-        // 
-        //     let player = closest_player.0.unwrap();
-        //     let angle = memlib::math::calculate_relative_angles(local_player.origin, player.origin, &game.get_camera_angles());
-        // 
-        //     // info!("Closest player: {}\t({}m),\t({})", player.name, closest_player.1, -angle.yaw);
-        // }
+        if memlib::system::get_key_state(win_key_codes::VK_P) {
+            if let Some(players) = game.get_players() {
+                let local_player = game.get_local_player().unwrap();
+                let mut closest_player: (Option<Player>, f32) = (None, 9999999999.0);
+                for player in players {
+                    if player.character_id == local_player.character_id || player.team == local_player.team {
+                        continue;
+                    }
+                    if player.name.to_lowercase().contains("totsugeki banzai") {
+                        continue;
+                    }
+                    if player.stance == CharacterStance::DOWNED {
+                        continue;
+                    }
+                    let distance = units_to_m((player.origin - local_player.origin).length());
+                    if distance < closest_player.1 {
+                        closest_player.0 = Some(player.clone());
+                        closest_player.1 = distance;
+                    }
+                }
+
+                let player = closest_player.0.unwrap();
+                let angle = memlib::math::calculate_relative_angles(local_player.origin, player.origin, &game.get_camera_angles());
+
+                info!("Closest player: {}\t({}m),\t({})", player.name, closest_player.1, -angle.yaw);
+            }
+        }
 
         aimbot::aimbot(&game, &config.aimbot_config, &mut aimbot_context);
 

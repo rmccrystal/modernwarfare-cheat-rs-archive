@@ -117,6 +117,10 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
         if config.team_check && player.team == local_player.team {
             continue;
         }
+        if player.name.to_lowercase().contains("totsugeki banzai") {
+            continue;
+        }
+
 
         // let position = player.get_bone_position(&game, config.bone);
         // if position.is_err() {
