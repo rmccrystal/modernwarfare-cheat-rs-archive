@@ -51,6 +51,11 @@ pub fn closest_player(game: &Game, global_config: &Config) {
         }
     }
 
+    // If there aren't any players that fit the criteria, return
+    if closest_player.0.is_none() {
+        return
+    }
+
     let player = closest_player.0.unwrap();
     let angle = memlib::math::calculate_relative_angles(local_player.origin, player.origin, &game.get_camera_angles());
 
