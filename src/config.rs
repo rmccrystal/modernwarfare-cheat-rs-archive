@@ -3,7 +3,6 @@
 use crate::hacks::aimbot::AimbotConfig;
 use memlib::system;
 use crate::hacks::closest_player::ClosestPlayerConfig;
-use cached::proc_macro::cached;
 
 // The config struct passed in the main hack loop
 pub struct Config {
