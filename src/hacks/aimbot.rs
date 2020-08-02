@@ -2,7 +2,7 @@ use crate::sdk::*;
 use log::*;
 use memlib::system;
 use memlib::math;
-use crate::config::Keybind;
+use crate::config::{Keybind, Config};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
 use memlib::math::Vector3;
@@ -48,7 +48,9 @@ impl AimbotContext {
     }
 }
 
-pub fn aimbot(game: &Game, config: &AimbotConfig, ctx: &mut AimbotContext) {
+pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
+    let config = &global_config.aimbot_config;
+
     if !config.keybind.get_state() {
         ctx.aim_lock_player_id = None;
         return;
@@ -75,7 +77,7 @@ pub fn aimbot(game: &Game, config: &AimbotConfig, ctx: &mut AimbotContext) {
         if let Some(id) = ctx.aim_lock_player_id {
             game.get_player_by_id(id)
         } else {
-            get_target(&game, &config, &get_aim_position)
+            get_target(&game, &config, &get_aim_position, &global_config.friends)
         }
     };
 
@@ -93,7 +95,7 @@ pub fn aimbot(game: &Game, config: &AimbotConfig, ctx: &mut AimbotContext) {
 }
 
 /// Returns the target to aim at or None otherwise
-fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3) -> Option<Player> {
+fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &Vec<String>) -> Option<Player> {
     let local_player = game.get_local_player()?;
     let mut player_list = game.get_players()?;
 
@@ -117,10 +119,9 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
         if config.team_check && player.team == local_player.team {
             continue;
         }
-        if player.name.to_lowercase().contains("totsugeki banzai") {
-            continue;
+        if friends.contains(&player.name) {
+            continue
         }
-
 
         // let position = player.get_bone_position(&game, config.bone);
         // if position.is_err() {

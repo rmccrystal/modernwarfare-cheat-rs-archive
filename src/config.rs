@@ -2,17 +2,22 @@
 
 use crate::hacks::aimbot::AimbotConfig;
 use memlib::system;
+use crate::hacks::closest_player::ClosestPlayerConfig;
 
 // The config struct passed in the main hack loop
 pub struct Config {
-    pub aimbot_config: AimbotConfig
+    pub aimbot_config: AimbotConfig,
+    pub cloest_player_config: ClosestPlayerConfig,
+    pub friends: Vec<String>    // Will consider friends teammates
 }
 
 impl Config {
     // Creates a config with the default settings
     pub fn default() -> Self {
         Self {
-            aimbot_config: AimbotConfig::default()
+            aimbot_config: AimbotConfig::default(),
+            cloest_player_config: ClosestPlayerConfig::default(),
+            friends: vec![]
         }
     }
 }

@@ -23,8 +23,7 @@ impl Player {
             character_id: char_info.entity_num,
             team: char_info.team,
             name: game.get_name_struct(char_info.entity_num as u32).get_name(),
-            stance: CharacterStance::STANDING
-            // stance: char_info.stance,
+            stance: char_info.stance,
         }
     }
 

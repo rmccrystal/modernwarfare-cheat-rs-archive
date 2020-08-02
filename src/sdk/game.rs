@@ -42,7 +42,8 @@ impl Game {
     }
 
     pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
-        let char_info: character_info = read_memory(self.get_character_array_base()? + (id as u64 * std::mem::size_of::<character_info>() as u64));
+        let player_base = self.get_character_array_base()? + (id as u64 * std::mem::size_of::<character_info>() as u64);
+        let char_info: character_info = read_memory(player_base);
         if char_info.info_valid == 0 {
             return None;
         }
