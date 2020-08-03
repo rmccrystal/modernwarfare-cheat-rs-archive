@@ -37,7 +37,8 @@ impl Game {
             return None;
         }
         let char_array = self.get_character_array()?;
-        let players = char_array.iter().map(|c| Player::new(&self, c)).collect();
+        let players = char_array.iter().map(|c| Player::new(&self, c))
+            .filter(|p| p.health > 0).collect();
         Some(players)
     }
 

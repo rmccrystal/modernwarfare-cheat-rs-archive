@@ -13,17 +13,20 @@ pub struct Player {
     pub origin: Vector3,
     pub team: i32,
     pub character_id: i32,
-    pub stance: CharacterStance
+    pub stance: CharacterStance,
+    pub health: i32,
 }
 
 impl Player {
     pub fn new(game: &Game, char_info: &character_info) -> Self {
+        let name_struct = game.get_name_struct(char_info.entity_num as u32);
         Self {
             origin: char_info.get_position(),
             character_id: char_info.entity_num,
             team: char_info.team,
-            name: game.get_name_struct(char_info.entity_num as u32).get_name(),
+            name: name_struct.get_name(),
             stance: char_info.stance,
+            health: name_struct.health,
         }
     }
 

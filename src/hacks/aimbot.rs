@@ -17,8 +17,9 @@ pub struct AimbotConfig {
     pub keybind: Keybind,
     pub aim_lock: bool,
     // Will lock onto the same player until button stops being pressed
-    pub distance_limit: f32,    // Distance limit in meteres
-    pub aim_at_downed: bool
+    pub distance_limit: f32,
+    // Distance limit in meteres
+    pub aim_at_downed: bool,
 }
 
 impl AimbotConfig {
@@ -87,6 +88,9 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         return;
     }
     let target = target.unwrap();
+    if target.stance == CharacterStance::DOWNED {
+        ctx.aim_lock_player_id = None;
+    }
 
     ctx.aim_lock_player_id = Some(target.character_id);
 
@@ -120,7 +124,7 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
             continue;
         }
         if friends.contains(&player.name) {
-            continue
+            continue;
         }
 
         // let position = player.get_bone_position(&game, config.bone);
@@ -167,10 +171,11 @@ fn aim_at(game: &Game, target: &Player, config: &AimbotConfig, get_aim_position:
 
     let delta = math::calculate_relative_angles(local_position, target_position, &local_view_angles);
 
-    debug!("Aiming at {}\t({}m)\t({}°)\t({:?})",
+    debug!("Aiming at {}\t({}m)\t({}°)\t({})\t({:?})",
            target.name,
            units_to_m((target_position - local_position).length()),
            delta.length(),
+           target.health,
            target.stance
     );
 
