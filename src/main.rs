@@ -25,7 +25,7 @@ fn run() -> Result<(), Box<dyn Error>> {
     system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
 
     // Create a game struct from the handle
-    let game = sdk::Game::new(handle)?;
+    let mut game = sdk::Game::new(handle)?;
 
     // Run the hack loop
     hacks::hack_loop(game)?;

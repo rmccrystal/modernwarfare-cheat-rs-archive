@@ -9,11 +9,22 @@ use super::player::Player;
 use memlib::math::{Angles2, Vector3};
 use crate::sdk::structs::character_info;
 
+/// Contains information about a game. Only exists when in a game
+pub struct GameInfo {
+    pub players: Vec<Player>,
+    pub local_position: Vector3,
+    pub local_view_angles: Angles2,
+    pub local_player: Player
+}
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
 pub struct Game {
     pub base_address: Address,
+    pub game_info: Option<GameInfo>,
+    client_info_base: Option<Address>,
+    character_array_base: Option<Address>,
+    bone_base: Option<Address>,
 }
 
 impl Game {
@@ -29,6 +40,27 @@ impl Game {
 
         Ok(Self {
             base_address,
+            client_info_base: None,
+            character_array_base: None,
+            bone_base: None,
+            game_info: None
+        })
+    }
+
+    /// This function updates the game data. Should be ran every game tick
+    pub fn update(&mut self) {
+        self.bone_base = self.get_bone_base();
+        self.character_array_base = self.get_character_array_base();
+        self.client_info_base = self.get_client_info_base();
+        self.game_info = self.get_game_info();
+    }
+
+    pub fn get_game_info(&self) -> Option<GameInfo> {
+        Some(GameInfo{
+            local_view_angles: self.get_camera_angles()?,
+            local_position: self.get_camera_position()?,
+            local_player: self.get_local_player()?,
+            players: self.get_players()?
         })
     }
 
@@ -50,15 +82,26 @@ impl Game {
         }
         Some(Player::new(&self, &char_info))
     }
+}
 
-    pub fn get_camera_position(&self) -> Vector3 {
+// Internal functions
+impl Game {
+    pub fn get_camera_position(&self) -> Option<Vector3> {
         let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
-        read_memory(camera_addr + offsets::CAMERA_OFFSET)
+        let pos: Vector3 = read_memory(camera_addr + offsets::CAMERA_OFFSET);
+        if pos.is_zero() {
+            return None;
+        }
+        Some(pos)
     }
 
-    pub fn get_camera_angles(&self) -> Angles2 {
+    pub fn get_camera_angles(&self) -> Option<Angles2> {
         let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
-        read_memory(camera_addr + offsets::CAMERA_OFFSET + 12)
+        let angles: Angles2 = read_memory(camera_addr + offsets::CAMERA_OFFSET + 12);
+        if angles.is_zero() {
+            return None
+        }
+        Some(angles)
     }
 
     pub fn get_local_player(&self) -> Option<Player> {
@@ -69,10 +112,7 @@ impl Game {
     pub fn in_game(&self) -> bool {
         read_memory::<i32>(self.base_address + offsets::IN_GAME) > 1
     }
-}
 
-// Internal functions
-impl Game {
     pub fn get_character_array(&self) -> Option<Vec<structs::character_info>> {
         // Get the character array base address
         let character_array_address: Address = self.get_character_array_base()?;
@@ -85,24 +125,10 @@ impl Game {
         let mut character_array: Vec<structs::character_info> =
             read_array::<_>(character_array_address, 155);
 
-        // for (index, character) in character_array.iter().enumerate() {
-        //     let pos = character.get_position();
-        //     if pos.is_zero() {
-        //         continue;
-        //     }
-        //     debug!("{}, {:?}", character_array_address + index as u64 * 0x3A60, pos);
-        // }
-
         // Remove all the invalid characters
         character_array.retain(|character| {
             character.info_valid == 1 && !character.get_position().is_zero()
         });
-
-        // If there are no characters, return None
-        if character_array.is_empty() {
-            trace!("Character array was empty");
-            return None;
-        }
 
         trace!("Found {} characters", character_array.len());
 

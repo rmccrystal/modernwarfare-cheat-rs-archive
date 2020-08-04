@@ -25,7 +25,7 @@ pub struct AimbotConfig {
 impl AimbotConfig {
     pub fn default() -> Self {
         Self {
-            team_check: true,
+            team_check: false,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 1.5,
@@ -57,13 +57,21 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         return;
     }
 
-    // Get player list
-    if game.get_character_array().is_none() {
-        debug!("No players");
-        return;
-    }
+    let game_info = {
+        if game.game_info.is_none() {
+            debug!("Not in game");
+            return;
+        }
+        game.game_info.as_ref().unwrap()
+    };
 
     let get_aim_position = |player: &Player| {
+        let bone_pos = player.get_bone_position(&game, config.bone);
+        if let Ok(pos) = bone_pos {
+            return pos;
+        }
+        debug!("Error getting bone position for {} with error: {}", player.name, bone_pos.unwrap_err());
+        // fallback
         let delta_z = match player.stance {
             CharacterStance::STANDING => 60.0,
             CharacterStance::CROUCHING => 40.0,
@@ -78,7 +86,7 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         if let Some(id) = ctx.aim_lock_player_id {
             game.get_player_by_id(id)
         } else {
-            get_target(&game, &config, &get_aim_position, &global_config.friends)
+            get_target(&game_info, &config, &get_aim_position, &global_config.friends)
         }
     };
 
@@ -95,29 +103,23 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
     ctx.aim_lock_player_id = Some(target.character_id);
 
     // Aim at target
-    let _ = aim_at(&game, &target, &config, get_aim_position);
+    let _ = aim_at(&game_info, &target, &config, get_aim_position);
 }
 
 /// Returns the target to aim at or None otherwise
-fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &Vec<String>) -> Option<Player> {
-    let local_player = game.get_local_player()?;
-    let mut player_list = game.get_players()?;
+fn get_target(game_info: &GameInfo, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &Vec<String>) -> Option<Player> {
+    let local_player = &game_info.local_player;
+    let mut player_list = game_info.players.clone();
 
     // Remove local_player
     player_list.retain(|player| player.character_id != local_player.character_id);
 
-    // If there are no players, return
-    if player_list.is_empty() {
-        return None;
-    }
-
-    let local_view_angles = game.get_camera_angles();
-    let local_position = game.get_camera_position();
+    let local_view_angles = &game_info.local_view_angles;
+    let local_position = &game_info.local_position;
 
     // Get the best player by FOV
     let mut target = None;
     let mut best_score = 9999999.0;
-
 
     for player in player_list {
         if config.team_check && player.team == local_player.team {
@@ -145,7 +147,7 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
             continue;
         }
 
-        let angle = math::calculate_relative_angles(local_position, position, &local_view_angles);
+        let angle = math::calculate_relative_angles(&local_position, &position, &local_view_angles);
         let distance = (local_position - position).length();
         let fov = angle.length();
 
@@ -162,14 +164,12 @@ fn get_target(game: &Game, config: &AimbotConfig, get_aim_position: impl Fn(&Pla
     target
 }
 
-fn aim_at(game: &Game, target: &Player, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3) -> Result<(), Box<dyn std::error::Error>> {
-    // let target_position = target.get_bone_position(&game, config.bone)?;
+fn aim_at(game_info: &GameInfo, target: &Player, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3) {
     let target_position = get_aim_position(&target);
+    let local_position = &game_info.local_position;
+    let local_view_angles = &game_info.local_view_angles;
 
-    let local_position = game.get_camera_position();
-    let local_view_angles = game.get_camera_angles();
-
-    let delta = math::calculate_relative_angles(local_position, target_position, &local_view_angles);
+    let delta = math::calculate_relative_angles(&local_position, &target_position, &local_view_angles);
 
     debug!("Aiming at {}\t({}m)\t({}°)\t({})\t({:?})",
            target.name,
@@ -189,6 +189,4 @@ fn aim_at(game: &Game, target: &Player, config: &AimbotConfig, get_aim_position:
     let dy = if dy as i32 == 0 { 1 } else { dy as i32 };
 
     system::move_mouse_relative(dx as i32, dy as i32);
-
-    Ok(())
 }

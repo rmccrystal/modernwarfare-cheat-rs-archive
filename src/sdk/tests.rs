@@ -58,8 +58,8 @@ fn character_info_t_size() {
 
 #[test]
 fn camera() {
-    assert!(!GAME.get_camera_position().is_zero());
-    assert!(!GAME.get_camera_angles().is_zero());
+    GAME.get_camera_position().unwrap();
+    GAME.get_camera_angles().unwrap();
 }
 
 #[test]

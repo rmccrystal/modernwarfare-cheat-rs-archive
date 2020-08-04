@@ -19,17 +19,19 @@ impl ClosestPlayerConfig {
 
 pub fn closest_player(game: &Game, global_config: &Config) {
     let config = &global_config.cloest_player_config;
-
     if !config.keybind.get_state() {
         return;
     }
-    let players = game.get_players();
-    if players.is_none() {
-        return;
-    }
-    let players = players.unwrap();
 
-    let local_player = game.get_local_player().unwrap();
+    let game_info = {
+        if game.game_info.is_none() {
+            return
+        }
+        game.game_info.as_ref().unwrap()
+    };
+
+    let players = &game_info.players;
+    let local_player = &game_info.local_player;
 
     let mut closest_player: (Option<Player>, f32) = (None, 9999999999.0);
 
@@ -57,7 +59,7 @@ pub fn closest_player(game: &Game, global_config: &Config) {
     }
 
     let player = closest_player.0.unwrap();
-    let angle = memlib::math::calculate_relative_angles(local_player.origin, player.origin, &game.get_camera_angles());
+    let angle = memlib::math::calculate_relative_angles(&local_player.origin, &player.origin, &game_info.local_view_angles);
 
     info!("Closest player: {}\t({}m),\t({})", player.name, closest_player.1, -angle.yaw);
 }
