@@ -18,7 +18,7 @@ impl Config {
         Self {
             aimbot_config: AimbotConfig::default(),
             cloest_player_config: ClosestPlayerConfig::default(),
-            no_recoil_enabled: true,
+            no_recoil_enabled: false,
             friends: vec![]
         }
     }

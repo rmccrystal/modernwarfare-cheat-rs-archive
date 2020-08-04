@@ -50,7 +50,7 @@ pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Resul
     }
     trace!("Found bone_ptr: 0x{:X}", bone_ptr);
 
-    let bone_pos: Vector3 = read_memory(bone_ptr as u64 + (bone_index as u64 * 0x20) + 0x10);
+    let mut bone_pos: Vector3 = read_memory(bone_ptr as u64 + (bone_index as u64 * 0x20) + 0x10);
     if bone_pos.is_zero() {
         return Err("Could not find bone_pos".into());
     }
@@ -58,5 +58,5 @@ pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Resul
     let client_info = game.get_client_info_base().ok_or("Could not find client_info_base")?;
     let base_pos: Vector3 = read_memory(client_info + offsets::bones::BASE_POS);
 
-    Ok(bone_pos + base_pos)
+    Ok(bone_pos)
 }

@@ -11,4 +11,3 @@ memlib = { path = "../memlib-rs" }
 win_key_codes = "0.1.2"
 log = "*"
 lazy_static = "*"
-gag = "0.1.10"

@@ -30,7 +30,11 @@ pub fn hack_loop(mut game: Game) -> Result<(), Box<dyn std::error::Error>> {
 
         closest_player::closest_player(&game, &config);
         aimbot::aimbot(&game, &config, &mut aimbot_context);
-        no_recoil_state_sender.send(NoRecoilState{enabled: config.no_recoil_enabled, client_info_base: game.client_info_base }).unwrap();
+        no_recoil_state_sender.send(NoRecoilState{
+            enabled: config.no_recoil_enabled,
+            client_info_base: game.client_info_base,
+            in_game: game.in_game()
+        }).unwrap();
 
 
         // println!("Enter address: ");

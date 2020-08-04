@@ -72,11 +72,11 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
     };
 
     let get_aim_position = |player: &Player| {
-        let bone_pos = player.get_bone_position(&game, config.bone);
-        if let Ok(pos) = bone_pos {
-            return pos;
-        }
-        debug!("Error getting bone position for {} with error: {}", player.name, bone_pos.unwrap_err());
+        // let bone_pos = player.get_bone_position(&game, config.bone);
+        // if let Ok(pos) = bone_pos {
+        //     return pos;
+        // }
+        // debug!("Error getting bone position for {} with error: {}", player.name, bone_pos.unwrap_err());
         // fallback
         let delta_z = match player.stance {
             CharacterStance::STANDING => 60.0,
