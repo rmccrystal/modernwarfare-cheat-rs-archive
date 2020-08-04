@@ -15,6 +15,8 @@ pub const INDEX_ARRAY: Address = 0xF6092C0;
 pub const LOCAL_INDEX_POINTER: Address = 0x4D808;
 pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
+pub const NO_RECOIL: Address = 0x000928DC;
+
 pub mod entity {
     use memlib::memory::Address;
 

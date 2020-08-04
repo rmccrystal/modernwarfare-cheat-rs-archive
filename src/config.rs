@@ -8,6 +8,7 @@ use crate::hacks::closest_player::ClosestPlayerConfig;
 pub struct Config {
     pub aimbot_config: AimbotConfig,
     pub cloest_player_config: ClosestPlayerConfig,
+    pub no_recoil_enabled: bool,
     pub friends: Vec<String>    // Will consider friends teammates
 }
 
@@ -17,6 +18,7 @@ impl Config {
         Self {
             aimbot_config: AimbotConfig::default(),
             cloest_player_config: ClosestPlayerConfig::default(),
+            no_recoil_enabled: true,
             friends: vec![]
         }
     }
