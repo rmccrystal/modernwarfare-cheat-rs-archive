@@ -4,6 +4,7 @@ use crate::config::{Keybind, Config};
 use log::*;
 
 pub struct ClosestPlayerConfig {
+    pub enabled: bool,
     pub ignore_downed: bool,
     pub keybind: Keybind,
 }
@@ -11,6 +12,7 @@ pub struct ClosestPlayerConfig {
 impl ClosestPlayerConfig {
     pub fn default() -> Self {
         Self {
+            enabled: true,
             ignore_downed: true,
             keybind: Keybind::WhilePressed(vec![win_key_codes::VK_P]),
         }
@@ -19,6 +21,10 @@ impl ClosestPlayerConfig {
 
 pub fn closest_player(game: &Game, global_config: &Config) {
     let config = &global_config.cloest_player_config;
+    if !config.enabled {
+        return;
+    }
+
     if !config.keybind.get_state() {
         return;
     }

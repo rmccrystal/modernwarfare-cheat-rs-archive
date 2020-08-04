@@ -22,9 +22,9 @@ pub struct GameInfo {
 pub struct Game {
     pub base_address: Address,
     pub game_info: Option<GameInfo>,
-    client_info_base: Option<Address>,
-    character_array_base: Option<Address>,
-    bone_base: Option<Address>,
+    pub client_info_base: Option<Address>,
+    pub character_array_base: Option<Address>,
+    pub bone_base: Option<Address>,
 }
 
 impl Game {

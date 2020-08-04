@@ -8,6 +8,7 @@ use crate::sdk::structs::CharacterStance;
 use memlib::math::Vector3;
 
 pub struct AimbotConfig {
+    pub enabled: bool,
     pub team_check: bool,
     pub bone: Bone,
     pub fov: f32,
@@ -25,6 +26,7 @@ pub struct AimbotConfig {
 impl AimbotConfig {
     pub fn default() -> Self {
         Self {
+            enabled: true,
             team_check: false,
             bone: Bone::Head,
             fov: 30.0,
@@ -51,6 +53,10 @@ impl AimbotContext {
 
 pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
     let config = &global_config.aimbot_config;
+
+    if !config.enabled {
+        return;
+    }
 
     if !config.keybind.get_state() {
         ctx.aim_lock_player_id = None;
