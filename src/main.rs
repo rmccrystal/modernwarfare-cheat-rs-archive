@@ -1,6 +1,7 @@
 use memlib::logger::MinimalLogger;
 use memlib::memory;
 use memlib::system;
+use memlib::overlay;
 
 use log::*;
 use std::error::Error;
@@ -22,13 +23,20 @@ fn run() -> Result<(), Box<dyn Error>> {
     let handle = memory::Handle::new(PROCESS_NAME)?;
 
     // Init system by connecting to RPC running on guest
+    info!("Connecting to system host");
     system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
 
+    // Init the overlay
+    let overlay = Box::new(overlay::looking_glass::LookingGlassOverlay::new(
+        "/tmp/overlay-pipe",
+        6
+    ).expect("Failed to create overlay"));
+
     // Create a game struct from the handle
-    let mut game = sdk::Game::new(handle)?;
+    let game = sdk::Game::new(handle)?;
 
     // Run the hack loop
-    hacks::hack_loop(game)?;
+    hacks::hack_loop(game, overlay)?;
 
     Ok(())
 }
@@ -38,7 +46,7 @@ fn main() {
         Ok(_) => {
             info!("Exiting cheat");
             0
-        },
+        }
         Err(err) => {
             error!("{}", err);
             1

@@ -33,6 +33,16 @@ impl Player {
     pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
         bone::get_bone_position(&game, self.character_id, unsafe { std::mem::transmute(bone_index)})
     }
+
+    pub fn get_head_position(&self) -> Vector3 {
+        let delta_z = match self.stance {
+            CharacterStance::STANDING => 60.0,
+            CharacterStance::CROUCHING => 40.0,
+            CharacterStance::CRAWLING => 10.0,
+            CharacterStance::DOWNED => 20.0,
+        };
+        self.origin + Vector3 { x: 0.0, y: 0.0, z: delta_z }
+    }
 }
 
 
@@ -49,7 +59,7 @@ impl character_info {
 impl name_t {
     pub fn get_name(&self) -> String {
         String::from_utf8(self.name.to_vec())
-            .expect("Failed to parse name")
+            .unwrap_or("".to_string())
             .trim_matches(char::from(0))
             .to_string()
     }

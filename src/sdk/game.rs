@@ -6,25 +6,29 @@ use super::encryption;
 use super::structs;
 use super::offsets;
 use super::player::Player;
-use memlib::math::{Angles2, Vector3};
-use crate::sdk::structs::character_info;
+use memlib::math::{Angles2, Vector3, Vector2};
+use crate::sdk::structs::{character_info, refdef_t};
+use crate::sdk::world_to_screen::world_to_screen;
 
 /// Contains information about a game. Only exists when in a game
+#[derive(Clone)]
 pub struct GameInfo {
     pub players: Vec<Player>,
     pub local_position: Vector3,
     pub local_view_angles: Angles2,
-    pub local_player: Player
+    pub local_player: Player,
 }
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
+#[derive(Clone)]
 pub struct Game {
     pub base_address: Address,
     pub game_info: Option<GameInfo>,
     pub client_info_base: Option<Address>,
     pub character_array_base: Option<Address>,
     pub bone_base: Option<Address>,
+    pub refdef: Option<Pointer<refdef_t>>,
 }
 
 impl Game {
@@ -38,13 +42,18 @@ impl Game {
             .ok_or_else(|| format!("Error getting module {}", crate::PROCESS_NAME))?
             .base_address;
 
-        Ok(Self {
+        let mut game = Self {
             base_address,
             client_info_base: None,
             character_array_base: None,
             bone_base: None,
-            game_info: None
-        })
+            game_info: None,
+            refdef: None,
+        };
+
+        game.update();
+
+        Ok(game)
     }
 
     /// This function updates the game data. Should be ran every game tick
@@ -53,14 +62,15 @@ impl Game {
         self.character_array_base = self.get_character_array_base();
         self.client_info_base = self.get_client_info_base();
         self.game_info = self.get_game_info();
+        self.refdef = encryption::get_refdef_pointer(self.base_address).ok()
     }
 
     pub fn get_game_info(&self) -> Option<GameInfo> {
-        Some(GameInfo{
+        Some(GameInfo {
             local_view_angles: self.get_camera_angles()?,
             local_position: self.get_camera_position()?,
             local_player: self.get_local_player()?,
-            players: self.get_players()?
+            players: self.get_players()?,
         })
     }
 
@@ -69,6 +79,7 @@ impl Game {
             return None;
         }
         let char_array = self.get_character_array()?;
+
         let players = char_array.iter().map(|c| Player::new(&self, c))
             .filter(|p| p.health > 0).collect();
         Some(players)
@@ -77,10 +88,22 @@ impl Game {
     pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
         let player_base = self.get_character_array_base()? + (id as u64 * std::mem::size_of::<character_info>() as u64);
         let char_info: character_info = read_memory(player_base);
-        if char_info.info_valid == 0 {
+        if !char_info.is_valid() {
             return None;
         }
         Some(Player::new(&self, &char_info))
+    }
+
+    pub fn world_to_screen(&self, world_pos: &Vector3) -> Option<Vector2> {
+        let refdef = encryption::get_refdef_pointer(self.base_address).ok()?.read();
+        world_to_screen(
+            &world_pos,
+            self.get_camera_position()?,
+            refdef.width,
+            refdef.height,
+            refdef.view.tan_half_fov,
+            refdef.view.axis,
+        )
     }
 }
 
@@ -99,18 +122,20 @@ impl Game {
         let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
         let angles: Angles2 = read_memory(camera_addr + offsets::CAMERA_OFFSET + 12);
         if angles.is_zero() {
-            return None
+            return None;
         }
         Some(angles)
     }
 
     pub fn get_local_player(&self) -> Option<Player> {
         let local_index = self.get_local_index()?;
+        trace!("Local index: {}", local_index);
         self.get_player_by_id(local_index)
     }
 
     pub fn in_game(&self) -> bool {
-        read_memory::<i32>(self.base_address + offsets::IN_GAME) > 1
+        return true;
+        read_memory::<i32>(self.base_address + offsets::GAMEMODE) > 1
     }
 
     pub fn get_character_array(&self) -> Option<Vec<structs::character_info>> {
@@ -126,9 +151,7 @@ impl Game {
             read_array::<_>(character_array_address, 155);
 
         // Remove all the invalid characters
-        character_array.retain(|character| {
-            character.info_valid == 1 && !character.get_position().is_zero()
-        });
+        character_array.retain(character_info::is_valid);
 
         trace!("Found {} characters", character_array.len());
 

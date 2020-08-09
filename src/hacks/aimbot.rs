@@ -7,6 +7,7 @@ use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
 use memlib::math::Vector3;
 
+#[derive(Clone, Debug)]
 pub struct AimbotConfig {
     pub enabled: bool,
     pub team_check: bool,
@@ -27,7 +28,7 @@ impl AimbotConfig {
     pub fn default() -> Self {
         Self {
             enabled: true,
-            team_check: false,
+            team_check: true,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 1.5,
@@ -71,28 +72,12 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         game.game_info.as_ref().unwrap()
     };
 
-    let get_aim_position = |player: &Player| {
-        // let bone_pos = player.get_bone_position(&game, config.bone);
-        // if let Ok(pos) = bone_pos {
-        //     return pos;
-        // }
-        // debug!("Error getting bone position for {} with error: {}", player.name, bone_pos.unwrap_err());
-        // fallback
-        let delta_z = match player.stance {
-            CharacterStance::STANDING => 60.0,
-            CharacterStance::CROUCHING => 40.0,
-            CharacterStance::CRAWLING => 10.0,
-            CharacterStance::DOWNED => 20.0,
-        };
-        player.origin + Vector3 { x: 0.0, y: 0.0, z: delta_z }
-    };
-
     // Get target
     let target = {
         if let Some(id) = ctx.aim_lock_player_id {
             game.get_player_by_id(id)
         } else {
-            get_target(&game_info, &config, &get_aim_position, &global_config.friends)
+            get_target(&game_info, &config, Player::get_head_position, &global_config.friends)
         }
     };
 
@@ -109,7 +94,7 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
     ctx.aim_lock_player_id = Some(target.character_id);
 
     // Aim at target
-    let _ = aim_at(&game_info, &target, &config, get_aim_position);
+    let _ = aim_at(&game_info, &target, &config, Player::get_head_position);
 }
 
 /// Returns the target to aim at or None otherwise

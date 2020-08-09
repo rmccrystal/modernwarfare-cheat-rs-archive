@@ -69,10 +69,15 @@ fn get_local_player() {
 
 #[test]
 fn character_names() {
-    assert_ne!(GAME.get_players().unwrap()[0].name, "");
+    assert_ne!(GAME.get_players().unwrap().get(0).expect("didn't find any players").name, "");
 }
 
 #[test]
 fn get_bone_pos() {
     GAME.get_local_player().unwrap().get_bone_position(&GAME, bone::Bone::Head).unwrap();
+}
+
+#[test]
+fn get_refdef() {
+    encryption::get_refdef_pointer(GAME.base_address).unwrap();
 }

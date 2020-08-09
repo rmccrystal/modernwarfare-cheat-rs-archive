@@ -3,6 +3,7 @@ use crate::sdk::structs::CharacterStance;
 use crate::config::{Keybind, Config};
 use log::*;
 
+#[derive(Clone, Debug)]
 pub struct ClosestPlayerConfig {
     pub enabled: bool,
     pub ignore_downed: bool,
