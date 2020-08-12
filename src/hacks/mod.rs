@@ -5,11 +5,12 @@ use memlib::util::LoopTimer;
 use memlib::memory::{read_memory, Address, write_memory};
 use memlib::math::{Angles2, Vector2};
 use crate::hacks::no_recoil::NoRecoilState;
-use memlib::overlay::{Overlay, OverlayInterface, Color};
+use memlib::overlay::{Overlay, OverlayInterface, Color, TextStyle, Font};
 use std::sync::Arc;
 use std::sync::mpsc::{Sender, channel};
 use std::thread::spawn;
 use crate::sdk::bone::Bone;
+use crate::hacks::aimbot::AimbotContext;
 
 
 pub mod aimbot;
@@ -25,11 +26,14 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
     // Create a timer from the tickrate of the cheat
     let mut timer = LoopTimer::new(crate::CHEAT_TICKRATE);
 
-    // Start render loop
-    let render_game_sender = start_render_thread(RenderState { game: game.clone(), config: config.clone() }, overlay);
-
     // Create contexts
     let mut aimbot_context = aimbot::AimbotContext::new();
+
+    // Start render loop
+    let render_game_sender = start_render_thread(
+        RenderState { game: game.clone(), config: config.clone(), aimbot_context: aimbot_context.clone() },
+        overlay
+    );
     let no_recoil_state_sender = no_recoil::start_no_recoil_thread();
 
     game.get_character_array();
@@ -41,7 +45,8 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
         // Send the updated game
         render_game_sender.send(RenderState {
             game: game.clone(),
-            config: config.clone()
+            config: config.clone(),
+            aimbot_context: aimbot_context.clone()
         }).expect("Failed to send RenderState");
         no_recoil_state_sender.send(NoRecoilState {
             enabled: config.no_recoil_enabled,
@@ -65,7 +70,8 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
 
 pub struct RenderState {
     game: Game,
-    config: Config
+    config: Config,
+    aimbot_context: AimbotContext
 }
 
 /// Returns a sender for new game updates
@@ -82,10 +88,14 @@ pub fn start_render_thread(state: RenderState, mut overlay: Overlay) -> Sender<R
 
             overlay.begin();
 
-            esp::esp(&state.game, &mut overlay, &state.config.esp_config);
+            esp::esp(&state.game, &mut overlay, &state.config.esp_config, &state.aimbot_context);
 
-            // let player = players.iter().find(|p| p.name == "Kreuger").unwrap();
-            // for i in 1..255 {
+            // dbg!(&state.game.game_info.as_ref().unwrap().players);
+
+            // let game = &state.game;
+            // let players = &game.game_info.as_ref().unwrap().players;
+            // let player = players.iter().find(|p| p.name == "Denny").unwrap();
+            // for i in 2..=24 {
             //     let pos = player.get_bone_position(&game, unsafe { std::mem::transmute(i) });
             //     if pos.is_err() { continue; };
             //     let pos = pos.unwrap();
@@ -94,7 +104,7 @@ pub fn start_render_thread(state: RenderState, mut overlay: Overlay) -> Sender<R
             //     if screen_pos.is_none() { continue; };
             //     let screen_pos = screen_pos.unwrap();
             //
-            //     overlay.draw_text((screen_pos.x as i32, screen_pos.y as i32), i.to_string(), Color::from_rgb(0, 0, 255), 8);
+            //     overlay.draw_text(screen_pos, &i.to_string(), Color::from_rgb(255, 255, 255), TextStyle::Outlined, Font::Pixel, 0.0, true);
             // }
 
             overlay.end();

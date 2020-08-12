@@ -6,6 +6,7 @@ use memlib::memory::{read_memory};
 use super::{Game, bone};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
+use log::*;
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -30,11 +31,27 @@ impl Player {
         }
     }
 
-    pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
-        bone::get_bone_position(&game, self.character_id, unsafe { std::mem::transmute(bone_index)})
+    pub fn get_bone_position(&self, game: &Game, bone: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
+        let pos = bone::get_bone_position(&game, self.character_id, unsafe { std::mem::transmute(bone) })?;
+        let distance_from_origin = crate::sdk::units_to_m((pos - self.origin).length());
+        if distance_from_origin > 2.0 {
+            warn!("bone {:?} ({}) {}m away from {}'s origin was read", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name);
+            return Err("Bone was too far away from player body".into());
+        }
+        Ok(pos)
     }
 
-    pub fn get_head_position(&self) -> Vector3 {
+    pub fn get_head_position(&self, game: &Game) -> Vector3 {
+        match self.get_bone_position(&game, Bone::Head) {
+            Ok(pos) => pos,
+            Err(err) => {
+                warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
+                self.assume_head_position()
+            }
+        }
+    }
+
+    pub fn assume_head_position(&self) -> Vector3 {
         let delta_z = match self.stance {
             CharacterStance::STANDING => 60.0,
             CharacterStance::CROUCHING => 40.0,
@@ -52,7 +69,7 @@ impl character_info {
     }
 
     pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
-        bone::get_bone_position(&game, self.entity_num, unsafe { std::mem::transmute(bone_index)})
+        bone::get_bone_position(&game, self.entity_num, unsafe { std::mem::transmute(bone_index) })
     }
 }
 

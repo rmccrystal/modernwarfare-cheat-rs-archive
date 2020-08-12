@@ -9,13 +9,11 @@ use crate::sdk::Game;
 #[repr(u32)]
 #[derive(Clone, Copy, Debug)]
 pub enum Bone {
-    Helmet = 8,
     Head = 7,
     Neck = 6,
     Chest = 5,
     Mid = 4,
     Tummy = 3,
-    Pelvis = 2,
 
     RightFoot1 = 21,
     RightFoot2 = 22,
@@ -38,13 +36,43 @@ pub enum Bone {
     RightHand4 = 12
 }
 
+use Bone::*;
+// Bone connections for a skeleton ESP
+pub static BONE_CONNECTIONS: &'static [(Bone, Bone)] = &[
+    (Head, Neck),
+    (Neck, Chest),
+    (Chest, Mid),
+    (Mid, Tummy),
+
+    (Tummy, LeftFoot1),
+    (LeftFoot1, LeftFoot2),
+    (LeftFoot2, LeftFoot3),
+    (LeftFoot3, LeftFoot4),
+
+    (Tummy, RightFoot1),
+    (RightFoot1, RightFoot2),
+    (RightFoot2, RightFoot3),
+    (RightFoot3, RightFoot4),
+
+    (Neck, LeftHand1),
+    (LeftHand1, LeftHand2),
+    (LeftHand2, LeftHand3),
+    (LeftHand3, LeftHand4),
+
+    (Neck, RightHand1),
+    (RightHand1, RightHand2),
+    (RightHand2, RightHand3),
+    (RightHand3, RightHand4),
+];
+
+
 pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Result<Vector3, Box<dyn std::error::Error>> {
     let bone_ptr_index: u16 = read_memory(game.base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
     trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);
 
     let bone_base = game.get_bone_base().ok_or("Could not find bone_base")?;
 
-    let bone_ptr: Address = read_memory(bone_base + (bone_ptr_index as u64 * 0x150) + 0xC0);
+    let bone_ptr: Address = read_memory(bone_base + (bone_ptr_index as u64 * offsets::bones::INDEX_STRUCT_SIZE as u64) + 0xC0);
     if bone_ptr == 0 {
         return Err("Could not find bone_ptr".into());
     }
@@ -57,6 +85,8 @@ pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Resul
 
     let client_info = game.get_client_info_base().ok_or("Could not find client_info_base")?;
     let base_pos: Vector3 = read_memory(client_info + offsets::bones::BASE_POS);
+
+    bone_pos = bone_pos + base_pos;
 
     Ok(bone_pos)
 }

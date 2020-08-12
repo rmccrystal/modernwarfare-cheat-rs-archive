@@ -9,18 +9,21 @@ use memlib::math::{Vector3, Vector2};
 #[derive(Clone)]
 pub struct character_info
 {
-    unk1: [u8; 0x1cc],
-    pub team: i32,
-    unk2: [u8; 0x434],
+    unk1: [u8; 0xa8],
     pub entity_num: i32,
-    unk3: [u8; 0x5c4],
+    unk2: [u8; 0x128],
+    pub team: i32,
+    unk3: [u8; 0x1b0],
     pub stance: CharacterStance,
-    unk4: [u8; 0xa00],
+    unk4: [u8; 0xd74],
     pub position_pointer: Address,
-    unk5: [u8; 0x24a0],
-} // Size: 0x3a78
+    unk5: [u8; 0x2758],
+    pub is_valid: i32,
+    unk6: [u8; 0x234],
+} // Size: 0x3a98
 
 impl character_info {
+    /*
     pub fn is_valid(&self) -> bool {
         let stance: i32 = unsafe {std::mem::transmute(self.stance)};
         self.entity_num >= 0 && self.entity_num <= 155
@@ -28,6 +31,9 @@ impl character_info {
             && stance >= 0 && stance <= 3
             && self.position_pointer != 0
             && self.position_pointer < 0xFFFFFFFFFFFFFF
+    }*/
+    pub fn is_valid(&self) -> bool {
+        self.is_valid == 1 && !self.get_position().is_zero()
     }
 }
 

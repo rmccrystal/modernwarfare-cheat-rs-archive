@@ -40,6 +40,7 @@ impl AimbotConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct AimbotContext {
     pub aim_lock_player_id: Option<i32> // The target ID we are aimlocking to
 }
@@ -72,12 +73,16 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         game.game_info.as_ref().unwrap()
     };
 
+    let get_head_pos = |player: &Player| {
+        player.get_head_position(&game)
+    };
+
     // Get target
     let target = {
         if let Some(id) = ctx.aim_lock_player_id {
             game.get_player_by_id(id)
         } else {
-            get_target(&game_info, &config, Player::get_head_position, &global_config.friends)
+            get_target(&game_info, &config, get_head_pos, &global_config.friends)
         }
     };
 
@@ -94,7 +99,7 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
     ctx.aim_lock_player_id = Some(target.character_id);
 
     // Aim at target
-    let _ = aim_at(&game_info, &target, &config, Player::get_head_position);
+    let _ = aim_at(&game_info, &target, &config, get_head_pos);
 }
 
 /// Returns the target to aim at or None otherwise

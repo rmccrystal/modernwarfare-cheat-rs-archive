@@ -9,6 +9,7 @@ use super::player::Player;
 use memlib::math::{Angles2, Vector3, Vector2};
 use crate::sdk::structs::{character_info, refdef_t};
 use crate::sdk::world_to_screen::world_to_screen;
+use std::os::raw::c_uchar;
 
 /// Contains information about a game. Only exists when in a game
 #[derive(Clone)]
@@ -163,7 +164,8 @@ impl Game {
         let name_array_base: Address = read_memory(self.base_address + offsets::NAME_ARRAY);
 
         let character_id = character_id as u64;
-        read_memory(name_array_base + offsets::NAME_LIST_OFFSET + ((character_id + character_id * 8) << 4))
+        let base = name_array_base + offsets::NAME_LIST_OFFSET + ((character_id + character_id * 8) << 4);
+        read_memory(base)
     }
 
     pub fn get_local_index(&self) -> Option<i32> {
