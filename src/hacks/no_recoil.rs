@@ -68,7 +68,7 @@ pub fn start_no_recoil_thread() -> Sender<NoRecoilState> {
     thread::spawn(move || {
         loop {
             thread::sleep(time::Duration::from_secs(1));
-            debug!("No recoil threads: {} writes / s", WRITE_COUNTER.load(Ordering::SeqCst));
+            trace!("No recoil threads: {} writes / s", WRITE_COUNTER.load(Ordering::SeqCst));
             let _ = WRITE_COUNTER.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |_| Some(0));
         }
     });
