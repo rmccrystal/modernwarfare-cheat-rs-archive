@@ -24,7 +24,7 @@ impl EspConfig {
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
             teams: true,
-            opacity: 150,
+            opacity: 200,
         }
     }
 }
@@ -123,7 +123,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         overlay.draw_text(
             Vector2 { x: left_x + width, y: top_y - 15.0 },
             &player.name,
-            config.name_color,
+            config.name_color.opacity(config.opacity),
             TextStyle::Shadow,
             Font::Verdana,
             0.0,
@@ -131,13 +131,12 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         );
     }
 
-    dbg!((player.health as f32 / 127.0) * 120.0);
-    let health_color = Color::from_hsv((player.health as f32 / 127.0) * 120.0, 45.0, 100.0);
+    let health_color = Color::from_hsv((player.health as f32 / 127.0) * 120.0, 45.0, 100.0).opacity(config.opacity);
     // health bar
     overlay.draw_box(
         Vector2 { x: left_x - 6.0, y: bottom_y + 1.0 }, // bottom left
         Vector2 { x: left_x - 2.0, y: top_y - 1.0 }, // top right
-        Color::from_rgba(0, 0, 0, 180),
+        Color::from_rgba(0, 0, 0, 180).opacity(config.opacity / 2),
         -1.0,
         0.0,
         true,
@@ -160,16 +159,16 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         flag_offset += flag_height;
     };
 
-    draw_flag(format!("{}m", distance.round()), Color::from_hex(0x32a3bf));
+    draw_flag(format!("{}m", distance.round()), Color::from_hex(0x32a3bf).opacity(config.opacity));
     match player.stance {
-        CharacterStance::STANDING => draw_flag("S".to_string(), Color::from_hex(0x1fdb1f)),
-        CharacterStance::CROUCHING => draw_flag("C".to_string(), Color::from_hex(0x1f9cdb)),
-        CharacterStance::CRAWLING => draw_flag("P".to_string(), Color::from_hex(0xdb931f)),
-        CharacterStance::DOWNED => draw_flag("D".to_string(), Color::from_hex(0xa83232))
+        CharacterStance::STANDING => draw_flag("S".to_string(), Color::from_hex(0x1fdb1f).opacity(config.opacity)),
+        CharacterStance::CROUCHING => draw_flag("C".to_string(), Color::from_hex(0x1f9cdb).opacity(config.opacity)),
+        CharacterStance::CRAWLING => draw_flag("P".to_string(), Color::from_hex(0xdb931f).opacity(config.opacity)),
+        CharacterStance::DOWNED => draw_flag("D".to_string(), Color::from_hex(0xa83232).opacity(config.opacity))
     }
-    draw_flag(format!("{}", player.team), Color::from_rgb(17, 161, 250));
+    draw_flag(format!("{}", player.team), Color::from_rgb(17, 161, 250).opacity(config.opacity));
 
-    draw_skeleton(&game, &mut overlay, &player, Color::from_rgb(255, 255, 255), 1.0);
+    draw_skeleton(&game, &mut overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
 }
 
 pub fn draw_skeleton(game: &Game, overlay: &mut Overlay, player: &Player, color: Color, thickness: f32) {

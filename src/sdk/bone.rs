@@ -38,7 +38,7 @@ pub enum Bone {
 
 use Bone::*;
 // Bone connections for a skeleton ESP
-pub static BONE_CONNECTIONS: &'static [(Bone, Bone)] = &[
+pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
     (Head, Neck),
     (Neck, Chest),
     (Chest, Mid),

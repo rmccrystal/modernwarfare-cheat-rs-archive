@@ -9,18 +9,18 @@ use memlib::math::{Vector3, Vector2};
 #[derive(Clone)]
 pub struct character_info
 {
-    unk1: [u8; 0xa8],
-    pub entity_num: i32,
-    unk2: [u8; 0x128],
+    unk1: [u8; 0x194],
     pub team: i32,
-    unk3: [u8; 0x1b0],
-    pub stance: CharacterStance,
-    unk4: [u8; 0xd74],
+    unk2: [u8; 0x790],
+    pub entity_num: i32,
+    unk3: [u8; 0x2c],
     pub position_pointer: Address,
-    unk5: [u8; 0x2758],
+    unk4: [u8; 0x100],
+    pub stance: CharacterStance,
+    unk5: [u8; 0x998],
     pub is_valid: i32,
-    unk6: [u8; 0x234],
-} // Size: 0x3a98
+    unk6: [u8; 0x2640],
+} // Size: 0x3a40
 
 impl character_info {
     /*

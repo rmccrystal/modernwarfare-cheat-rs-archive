@@ -54,7 +54,6 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
             in_game: game.in_game(),
         }).expect("Failed to send NoRecoilState");
 
-        closest_player::closest_player(&game, &config);
         aimbot::aimbot(&game, &config, &mut aimbot_context);
 
 
@@ -89,6 +88,7 @@ pub fn start_render_thread(state: RenderState, mut overlay: Overlay) -> Sender<R
             overlay.begin();
 
             esp::esp(&state.game, &mut overlay, &state.config.esp_config, &state.aimbot_context);
+            closest_player::closest_player(&state.game, &state.config, &mut overlay);
 
             // dbg!(&state.game.game_info.as_ref().unwrap().players);
 

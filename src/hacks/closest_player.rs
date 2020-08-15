@@ -2,12 +2,13 @@ use crate::sdk::*;
 use crate::sdk::structs::CharacterStance;
 use crate::config::{Keybind, Config};
 use log::*;
+use memlib::overlay::{Overlay, Color, TextStyle, Font};
+use memlib::math::Vector2;
 
 #[derive(Clone, Debug)]
 pub struct ClosestPlayerConfig {
     pub enabled: bool,
     pub ignore_downed: bool,
-    pub keybind: Keybind,
 }
 
 impl ClosestPlayerConfig {
@@ -15,18 +16,13 @@ impl ClosestPlayerConfig {
         Self {
             enabled: true,
             ignore_downed: true,
-            keybind: Keybind::WhilePressed(vec![win_key_codes::VK_P]),
         }
     }
 }
 
-pub fn closest_player(game: &Game, global_config: &Config) {
+pub fn closest_player(game: &Game, global_config: &Config, overlay: &mut Overlay) {
     let config = &global_config.cloest_player_config;
     if !config.enabled {
-        return;
-    }
-
-    if !config.keybind.get_state() {
         return;
     }
 
@@ -66,7 +62,16 @@ pub fn closest_player(game: &Game, global_config: &Config) {
     }
 
     let player = closest_player.0.unwrap();
+    let distance = closest_player.1;
     let angle = memlib::math::calculate_relative_angles(&local_player.origin, &player.origin, &game_info.local_view_angles);
 
-    info!("Closest player: {}\t({}m),\t({})", player.name, closest_player.1, -angle.yaw);
+    overlay.draw_text(
+        Vector2{x: 7.0, y: 20.0},
+        &format!("Closest player: {}\t({}m),\t({})", player.name, distance, -angle.yaw),
+        if distance < 50.0 { Color::from_rgb(255, 0, 0) } else { Color::from_rgb(255, 255, 255) },
+        TextStyle::Shadow,
+        Font::Verdana,
+        0.0,
+        false
+    );
 }

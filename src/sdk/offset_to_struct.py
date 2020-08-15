@@ -48,12 +48,13 @@ while True:
     if name == "":
         break
 
-    offset = int(input(f"Enter offset for {name}: "), 0)
     type = input(f"Enter type of {name}: ")
     if type in type_cache:
         type_size = type_cache[type]
     else:
         type_size = int(input(f"Enter size in bytes {name}: "), 0)
+
+    offset = int(input(f"Enter offset for {name}: "), 0)
 
     print()
 
