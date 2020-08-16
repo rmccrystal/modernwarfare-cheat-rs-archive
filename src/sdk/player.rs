@@ -26,7 +26,8 @@ impl Player {
             character_id: char_info.entity_num,
             team: char_info.team,
             name: name_struct.get_name(),
-            stance: char_info.stance,
+            // stance: char_info.stance,
+            stance: CharacterStance::STANDING,
             health: name_struct.health,
         }
     }

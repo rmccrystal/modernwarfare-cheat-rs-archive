@@ -3,19 +3,19 @@
 use memlib::memory::Address;
 
 // not updated
-pub const GAMEMODE: Address = 0x13A56AE8;
+pub const GAMEMODE: Address = 0x13D7EB68;
 
-pub const REFDEF: Address = 0x13D2C9D0;
+pub const REFDEF: Address = 0x13FECAF0;
 
-pub const NAME_ARRAY: Address = 0x13D38328;
+pub const NAME_ARRAY: Address = 0x13FF8428;
 pub const NAME_LIST_OFFSET: Address = 0x4C70;
 
-pub const CAMERA_POINTER: Address = 0x11214500;
+pub const CAMERA_POINTER: Address = 0x114D4500;
 pub const CAMERA_OFFSET: Address = 0x1D8;
 
-pub const INDEX_ARRAY: Address = 0x1200BD50;
+pub const INDEX_ARRAY: Address = 0x122CBD40;
 
-pub const LOCAL_INDEX_POINTER: Address = 0x698;
+pub const LOCAL_INDEX_POINTER: Address = 0x2A3C0;
 pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
 pub const NO_RECOIL: Address = 0x634;
@@ -32,26 +32,26 @@ pub mod entity {
 pub mod client_info {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x13D2AC98;
-    pub const REVERSED_ADDRESS: Address = 0x4D1C1E4;
-    pub const DISPLACEMENT: Address = 0xD;
+    pub const ENCRYPTED_PTR: Address = 0x13FEAD98;
+    pub const REVERSED_ADDRESS: Address = 0x4F791ED;
+    pub const DISPLACEMENT: Address = 0x15;
 }
 
 pub mod client_base {
     use memlib::memory::Address;
 
-    pub const BASE_OFFSET: Address = 0x97B28;
-    pub const BASE_REVERSED_ADDR: Address = 0x4D1C1F9;
-    pub const BASE_DISPLACEMENT: Address = 0xD;
-    pub const SIZE: usize = 0x3A40;
+    pub const BASE_OFFSET: Address = 0x97B38;
+    pub const BASE_REVERSED_ADDR: Address = 0x4F79224;
+    pub const BASE_DISPLACEMENT: Address = 0x13;
+    pub const SIZE: usize = 0x3A60;
 }
 
 pub mod bones {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x1200D118;
-    pub const REVERSED_ADDRESS: Address = 0x4D1C2A1;
-    pub const DISPLACEMENT: Address = 0x13;
-    pub const BASE_POS: Address = 0x604E4;
+    pub const ENCRYPTED_PTR: Address = 0x122CD108;
+    pub const REVERSED_ADDRESS: Address = 0x4F792C9;
+    pub const DISPLACEMENT: Address = 0x19;
+    pub const BASE_POS: Address = 0x587C;
     pub const INDEX_STRUCT_SIZE: usize = 0x150;
 }
