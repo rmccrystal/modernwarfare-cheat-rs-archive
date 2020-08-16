@@ -9,6 +9,7 @@ use std::error::Error;
 mod sdk;
 mod hacks;
 mod config;
+mod gui;
 
 pub const PROCESS_NAME: &str = "modernwarfare.exe";
 pub const CHEAT_TICKRATE: u64 = 50;
