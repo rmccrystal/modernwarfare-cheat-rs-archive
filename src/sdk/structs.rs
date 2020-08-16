@@ -17,8 +17,9 @@ pub struct character_info
     pub is_valid: i32,
     unk4: [u8; 0x40],
     pub position_pointer: Address,
-    // pub stance: CharacterStance,
-    unk5: [u8; 0xAE8],
+    unk5: [u8; 0x1EC],
+    pub stance: CharacterStance,
+    unk6: [u8; 0x8F8],
 } // Size: 0x3a40
 
 impl character_info {

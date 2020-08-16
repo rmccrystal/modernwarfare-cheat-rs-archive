@@ -11,6 +11,7 @@ use std::sync::mpsc::{Sender, channel};
 use std::thread::spawn;
 use crate::sdk::bone::Bone;
 use crate::hacks::aimbot::AimbotContext;
+use log::*;
 
 
 pub mod aimbot;
@@ -32,7 +33,7 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
     // Start render loop
     let render_game_sender = start_render_thread(
         RenderState { game: game.clone(), config: config.clone(), aimbot_context: aimbot_context.clone() },
-        overlay
+        overlay,
     );
     let no_recoil_state_sender = no_recoil::start_no_recoil_thread();
 
@@ -46,7 +47,7 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
         render_game_sender.send(RenderState {
             game: game.clone(),
             config: config.clone(),
-            aimbot_context: aimbot_context.clone()
+            aimbot_context: aimbot_context.clone(),
         }).expect("Failed to send RenderState");
         no_recoil_state_sender.send(NoRecoilState {
             enabled: config.no_recoil_enabled,
@@ -57,20 +58,18 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
         aimbot::aimbot(&game, &config, &mut aimbot_context);
 
 
-        // println!("Enter address: ");
-        // let stdin = std::io::stdin();
-        // let mut buff = String::new();
-        // stdin.read_line(&mut buff).unwrap();
-        // let buff: u64 = buff.trim().parse().unwrap();
-        //
-        // memlib::memory::new_interactive_scan::<i32>((buff, buff + offsets::client_base::SIZE as u64), true);
+        // let id = game.get_local_index().unwrap();
+        // debug!("Found local player id: {}", id);
+        // let local_addr = game.get_character_array_base().unwrap() + id as u64 * std::mem::size_of::<structs::character_info>() as u64;
+        // debug!("Found local player address: 0x{:X}", local_addr);
+        // memlib::memory::new_interactive_scan::<i32>((local_addr, local_addr + offsets::client_base::SIZE as u64), true);
     }
 }
 
 pub struct RenderState {
     game: Game,
     config: Config,
-    aimbot_context: AimbotContext
+    aimbot_context: AimbotContext,
 }
 
 /// Returns a sender for new game updates

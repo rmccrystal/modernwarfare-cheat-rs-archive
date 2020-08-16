@@ -1,10 +1,12 @@
 use crate::sdk::{Game, Player, units_to_m};
+use std::cmp;
 use crate::sdk::structs::CharacterStance;
 use memlib::overlay::{Overlay, OverlayInterface, Color, TextStyle, Font};
 use memlib::math::{Vector3, Vector2};
 use memlib::unwrap_or_return;
 use crate::hacks::aimbot::AimbotContext;
 use crate::sdk::bone::Bone;
+use std::cmp::Ordering;
 
 #[derive(Copy, Clone, Debug)]
 pub struct EspConfig {
@@ -23,7 +25,7 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: false,
+            teams: true,
             opacity: 200,
         }
     }
@@ -39,8 +41,14 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &EspConfig, aimbot_contex
         None => return
     };
 
-    // todo: sort by distance
-    for player in &game_info.players.clone() {
+    let mut players = game_info.players.clone();
+    let local_origin = &game_info.local_position;
+    // sort players
+    players.sort_by(|a, b|
+        (a.origin - local_origin).length().partial_cmp(
+            &(b.origin - local_origin).length()).unwrap_or(Ordering::Equal));
+
+    for player in &players {
         if player.character_id == game_info.local_player.character_id {
             continue;
         }
@@ -67,24 +75,15 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         return;
     }
 
-    let head_pos = player.get_head_position(&game);
-    let head_pos = unwrap_or_return!(game.world_to_screen(&(head_pos + Vector3{x: 0.0, y: 0.0, z: 10.0})));
-    let feet_pos = unwrap_or_return!(game.world_to_screen(&(player.origin)));
+    let bbox = unwrap_or_return!(player.get_bounding_box(&game));
 
-    let height = feet_pos.y - head_pos.y;
-    let width = match player.stance {
-        CharacterStance::STANDING => height / 4.0,
-        CharacterStance::CROUCHING => height / 2.5,
-        CharacterStance::DOWNED => height * 2.0,
-        CharacterStance::CRAWLING => height * 2.5,
-    };
+    let left_x = bbox.0.x;
+    let bottom_y = bbox.0.y;
+    let right_x = bbox.1.x;
+    let top_y = bbox.1.y;
 
-    let size = 1.0;
-
-    let left_x = feet_pos.x - width - size;
-    let right_x = feet_pos.x + width + size;
-    let top_y = head_pos.y - size;
-    let bottom_y = feet_pos.y + size;
+    let width = right_x - left_x;
+    let height = bottom_y - top_y;
 
     // outline
     overlay.draw_box(
@@ -121,7 +120,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
     if distance < 150.0 {
         // Draw name
         overlay.draw_text(
-            Vector2 { x: left_x + width, y: top_y - 15.0 },
+            Vector2 { x: left_x + (width / 2.0), y: top_y - 15.0 },
             &player.name,
             config.name_color.opacity(config.opacity),
             TextStyle::Shadow,
@@ -178,7 +177,7 @@ pub fn draw_skeleton(game: &Game, overlay: &mut Overlay, player: &Player, color:
         overlay.draw_line(pos1, pos2, color, thickness);
     }
     // draw head line (the head bone is really low)
-    let trans = Vector3{x: 0.0, y: 0.0, z: 5.0};
+    let trans = Vector3 { x: 0.0, y: 0.0, z: 5.0 };
     let pos1 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, Bone::Head).ok())));
     let pos2 = unwrap_or_return!(game.world_to_screen(&(unwrap_or_return!(player.get_bone_position(&game, Bone::Head).ok()) + trans)));
     overlay.draw_line(pos1, pos2, color, thickness);
