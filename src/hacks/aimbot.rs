@@ -31,7 +31,7 @@ impl AimbotConfig {
             team_check: true,
             bone: Bone::Head,
             fov: 30.0,
-            smooth: 1.5,
+            smooth: 1.2,
             keybind: Keybind::WhilePressed(vec![win_key_codes::VK_XBUTTON1]),
             aim_lock: true,
             distance_limit: 400.0,

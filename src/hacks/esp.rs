@@ -16,6 +16,7 @@ pub struct EspConfig {
     max_distance: f32,
     teams: bool,
     opacity: u8,
+    skeleton: bool,
 }
 
 impl EspConfig {
@@ -25,8 +26,9 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: true,
+            teams: false,
             opacity: 200,
+            skeleton: false,
         }
     }
 }
@@ -47,6 +49,7 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &EspConfig, aimbot_contex
     players.sort_by(|a, b|
         (a.origin - local_origin).length().partial_cmp(
             &(b.origin - local_origin).length()).unwrap_or(Ordering::Equal));
+    players.reverse();
 
     for player in &players {
         if player.character_id == game_info.local_player.character_id {
@@ -167,7 +170,9 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
     }
     draw_flag(format!("{}", player.team), Color::from_rgb(17, 161, 250).opacity(config.opacity));
 
-    draw_skeleton(&game, &mut overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
+    if config.skeleton {
+        draw_skeleton(&game, &mut overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
+    }
 }
 
 pub fn draw_skeleton(game: &Game, overlay: &mut Overlay, player: &Player, color: Color, thickness: f32) {
