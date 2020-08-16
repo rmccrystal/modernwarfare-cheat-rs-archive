@@ -142,7 +142,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
     );
     overlay.draw_box(
         Vector2 { x: left_x - 5.0, y: bottom_y }, // bottom left
-        Vector2 { x: left_x - 3.0, y: bottom_y - 2.0 - ((height) * (player.health as f32 / 127.0)) }, // top right
+        Vector2 { x: left_x - 3.0, y: bottom_y - ((height) * (player.health as f32 / 127.0)) }, // top right
         health_color,
         -1.0,
         0.0,
