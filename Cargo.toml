@@ -11,3 +11,4 @@ memlib = { path = "../memlib-rs" }
 win_key_codes = "0.1.2"
 log = "*"
 lazy_static = "*"
+rand = { version = "0.7.3", features = ["small_rng"] }

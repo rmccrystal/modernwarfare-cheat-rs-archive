@@ -7,6 +7,7 @@ use memlib::unwrap_or_return;
 use crate::hacks::aimbot::AimbotContext;
 use crate::sdk::bone::Bone;
 use std::cmp::Ordering;
+use rand::{SeedableRng, RngCore};
 
 #[derive(Copy, Clone, Debug)]
 pub struct EspConfig {
@@ -168,6 +169,8 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
     // Draw distance
     draw_flag(&format!("{}m", distance.round()), Color::from_hex(0xCCE8CC).opacity(config.opacity));
 
+    let team_color = Color::new(rand::rngs::SmallRng::seed_from_u64(player.team as u64).next_u32()).opacity(255);
+
     if distance < config.extra_info_distance {
         match player.stance {
             CharacterStance::STANDING => {},//draw_flag("S", Color::from_hex(0x1fdb1f).opacity(config.opacity)),
@@ -178,7 +181,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         if player.ads {
             draw_flag("ADS", Color::from_hex(0xA75A97).opacity(config.opacity));
         }
-        draw_flag(&format!("{}", player.team), Color::from_rgb(17, 161, 250).opacity(config.opacity));
+        draw_flag(&format!("{}", player.team), team_color.opacity(config.opacity));
     }
 
     if config.skeleton {
