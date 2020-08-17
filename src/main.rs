@@ -37,12 +37,8 @@ fn run() -> Result<(), Box<dyn Error>> {
     // Create a game struct from the handle
     let game = sdk::Game::new(handle)?;
 
-    let config = config::Config::default();
-
-    let gui = gui::Gui::new(config.clone()).expect("Error creating gui");
-
     // Run the hack loop
-    hacks::hack_loop(game, overlay, config, gui)?;
+    hacks::hack_loop(game, overlay)?;
 
     Ok(())
 }
