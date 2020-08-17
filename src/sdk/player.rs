@@ -38,7 +38,7 @@ impl Player {
         let pos = bone::get_bone_position(&game, self.character_id, unsafe { std::mem::transmute(bone) })?;
         let distance_from_origin = crate::sdk::units_to_m((pos - self.origin).length());
         if distance_from_origin > 2.0 {
-            warn!("bone {:?} ({}) {}m away from {}'s origin was read", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name);
+            warn!("bone {:?} ({}) {}m away from {}'s origin was read ({:?})", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name, pos);
             return Err("Bone was too far away from player body".into());
         }
         Ok(pos)

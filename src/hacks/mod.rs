@@ -56,6 +56,7 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
         }).expect("Failed to send NoRecoilState");
 
         aimbot::aimbot(&game, &config, &mut aimbot_context);
+
     }
 }
 

@@ -67,7 +67,7 @@ pub fn closest_player(game: &Game, global_config: &Config, overlay: &mut Overlay
 
     overlay.draw_text(
         Vector2{x: 7.0, y: 20.0},
-        &format!("Closest player: {}\t({}m),\t({})", player.name, distance, -angle.yaw),
+        &format!("Closest player: {}\t({}m),\t({})", player.name, distance.round(), -angle.yaw.round()),
         TextOptions::default().color(if distance < 50.0 { Color::from_rgb(255, 0, 0) } else { Color::from_rgb(255, 255, 255) })
     );
 }

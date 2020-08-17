@@ -35,6 +35,9 @@ impl character_info {
             && self.position_pointer < 0xFFFFFFFFFFFFFF
     }*/
     pub fn is_valid(&self) -> bool {
+        if self.position_pointer > 0xFFFFFFFFFFFFFF {
+            return false;
+        }
         self.is_valid == 1 && !self.get_position().is_zero()
     }
 }
