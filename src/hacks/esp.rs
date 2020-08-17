@@ -28,7 +28,7 @@ impl EspConfig {
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
             teams: true,
-            opacity: 50,
+            opacity: 200,
             skeleton: true,
             extra_info_distance: 200.0,
         }
@@ -175,7 +175,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
             CharacterStance::CRAWLING => draw_flag("P", Color::from_hex(0xdb931f).opacity(config.opacity)),
             CharacterStance::DOWNED => draw_flag("D", Color::from_hex(0xa83232).opacity(config.opacity))
         }
-        if !player.ads {
+        if player.ads {
             draw_flag("ADS", Color::from_hex(0xA75A97).opacity(config.opacity));
         }
         draw_flag(&format!("{}", player.team), Color::from_rgb(17, 161, 250).opacity(config.opacity));
