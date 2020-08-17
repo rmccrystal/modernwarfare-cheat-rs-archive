@@ -2,7 +2,7 @@ use crate::sdk::*;
 use crate::sdk::structs::CharacterStance;
 use crate::config::{Keybind, Config};
 use log::*;
-use memlib::overlay::{Overlay, Color, TextStyle, Font};
+use memlib::overlay::{Overlay, Color, TextStyle, Font, TextOptions};
 use memlib::math::Vector2;
 
 #[derive(Clone, Debug)]
@@ -68,10 +68,6 @@ pub fn closest_player(game: &Game, global_config: &Config, overlay: &mut Overlay
     overlay.draw_text(
         Vector2{x: 7.0, y: 20.0},
         &format!("Closest player: {}\t({}m),\t({})", player.name, distance, -angle.yaw),
-        if distance < 50.0 { Color::from_rgb(255, 0, 0) } else { Color::from_rgb(255, 255, 255) },
-        TextStyle::Shadow,
-        Font::Verdana,
-        0.0,
-        false
+        TextOptions::default().color(if distance < 50.0 { Color::from_rgb(255, 0, 0) } else { Color::from_rgb(255, 255, 255) })
     );
 }
