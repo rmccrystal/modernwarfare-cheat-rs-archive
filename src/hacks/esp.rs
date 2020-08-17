@@ -17,6 +17,7 @@ pub struct EspConfig {
     teams: bool,
     opacity: u8,
     skeleton: bool,
+    extra_info_distance: f32,
 }
 
 impl EspConfig {
@@ -26,9 +27,10 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: false,
-            opacity: 200,
+            teams: true,
+            opacity: 50,
             skeleton: false,
+            extra_info_distance: 200.0,
         }
     }
 }
@@ -119,8 +121,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         false,
     );
 
-
-    if distance < 150.0 {
+    if distance < config.extra_info_distance {
         // Draw name
         overlay.draw_text(
             Vector2 { x: left_x + (width / 2.0), y: top_y - 15.0 },
@@ -131,44 +132,52 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
             0.0,
             true,
         );
-    }
 
-    let health_color = Color::from_hsv((player.health as f32 / 127.0) * 120.0, 45.0, 100.0).opacity(config.opacity);
-    // health bar
-    overlay.draw_box(
-        Vector2 { x: left_x - 6.0, y: bottom_y + 1.0 }, // bottom left
-        Vector2 { x: left_x - 2.0, y: top_y - 1.0 }, // top right
-        Color::from_rgba(0, 0, 0, 180).opacity(config.opacity / 2),
-        -1.0,
-        0.0,
-        true,
-    );
-    overlay.draw_box(
-        Vector2 { x: left_x - 5.0, y: bottom_y }, // bottom left
-        Vector2 { x: left_x - 3.0, y: bottom_y - ((height) * (player.health as f32 / 127.0)) }, // top right
-        health_color,
-        -1.0,
-        0.0,
-        true,
-    );
+        let health_color = Color::from_hsv((player.health as f32 / 127.0) * 120.0, 45.0, 100.0).opacity(config.opacity);
+        // health bar
+        overlay.draw_box(
+            Vector2 { x: left_x - 6.0, y: bottom_y + 1.0 }, // bottom left
+            Vector2 { x: left_x - 2.0, y: top_y - 1.0 }, // top right
+            Color::from_rgba(0, 0, 0, 180).opacity(config.opacity / 2),
+            -1.0,
+            0.0,
+            true,
+        );
+        overlay.draw_box(
+            Vector2 { x: left_x - 5.0, y: bottom_y }, // bottom left
+            Vector2 { x: left_x - 3.0, y: bottom_y - ((height) * (player.health as f32 / 127.0)) }, // top right
+            health_color,
+            -1.0,
+            0.0,
+            true,
+        );
+
+    }
 
     // draw flags
     let mut flag_offset = -3.0;
     let flag_height = 8.0;
 
-    let mut draw_flag = |text: String, color: Color| {
+    let mut draw_flag = |text: &str, color: Color| {
         overlay.draw_text(Vector2 { x: right_x + 3.0, y: top_y + flag_offset }, &text, color, TextStyle::Outlined, Font::Pixel, 0.0, false);
         flag_offset += flag_height;
     };
 
-    draw_flag(format!("{}m", distance.round()), Color::from_hex(0x32a3bf).opacity(config.opacity));
-    match player.stance {
-        CharacterStance::STANDING => draw_flag("S".to_string(), Color::from_hex(0x1fdb1f).opacity(config.opacity)),
-        CharacterStance::CROUCHING => draw_flag("C".to_string(), Color::from_hex(0x1f9cdb).opacity(config.opacity)),
-        CharacterStance::CRAWLING => draw_flag("P".to_string(), Color::from_hex(0xdb931f).opacity(config.opacity)),
-        CharacterStance::DOWNED => draw_flag("D".to_string(), Color::from_hex(0xa83232).opacity(config.opacity))
+    // Draw distance
+    draw_flag(&format!("{}m", distance.round()), Color::from_hex(0xCCE8CC).opacity(config.opacity));
+
+    if distance < config.extra_info_distance {
+        match player.stance {
+            CharacterStance::STANDING => {},//draw_flag("S", Color::from_hex(0x1fdb1f).opacity(config.opacity)),
+            CharacterStance::CROUCHING => draw_flag("C", Color::from_hex(0x1f9cdb).opacity(config.opacity)),
+            CharacterStance::CRAWLING => draw_flag("P", Color::from_hex(0xdb931f).opacity(config.opacity)),
+            CharacterStance::DOWNED => draw_flag("D", Color::from_hex(0xa83232).opacity(config.opacity))
+        }
+        if !player.ads {
+            draw_flag("ADS", Color::from_hex(0xA75A97).opacity(config.opacity));
+        }
+        draw_flag(&format!("{}", player.team), Color::from_rgb(17, 161, 250).opacity(config.opacity));
     }
-    draw_flag(format!("{}", player.team), Color::from_rgb(17, 161, 250).opacity(config.opacity));
 
     if config.skeleton {
         draw_skeleton(&game, &mut overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);

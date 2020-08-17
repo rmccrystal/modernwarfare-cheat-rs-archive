@@ -1,3 +1,4 @@
+pub mod debug;
 pub mod bone;
 mod game;
 mod encryption;

@@ -16,6 +16,7 @@ pub struct Player {
     pub character_id: i32,
     pub stance: CharacterStance,
     pub health: i32,
+    pub ads: bool,
 }
 
 impl Player {
@@ -27,6 +28,7 @@ impl Player {
             team: char_info.team,
             name: name_struct.get_name(),
             stance: char_info.stance,
+            ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
             health: name_struct.health,
         }

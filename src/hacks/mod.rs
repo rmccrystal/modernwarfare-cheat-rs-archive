@@ -56,13 +56,6 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
         }).expect("Failed to send NoRecoilState");
 
         aimbot::aimbot(&game, &config, &mut aimbot_context);
-
-
-        // let id = game.get_local_index().unwrap();
-        // debug!("Found local player id: {}", id);
-        // let local_addr = game.get_character_array_base().unwrap() + id as u64 * std::mem::size_of::<structs::character_info>() as u64;
-        // debug!("Found local player address: 0x{:X}", local_addr);
-        // memlib::memory::new_interactive_scan::<i32>((local_addr, local_addr + offsets::client_base::SIZE as u64), true);
     }
 }
 
