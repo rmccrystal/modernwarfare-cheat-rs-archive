@@ -494,7 +494,6 @@ dependencies = [
  "futures",
  "impl_ops",
  "lazy_static",
- "libc",
  "log",
  "pretty-hex",
  "regex",

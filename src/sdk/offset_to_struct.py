@@ -60,4 +60,10 @@ while True:
 
     offsets_input.append(Offset(name, offset, type, type_size))
 
+# print(struct_size_input)
+# for offset in offsets_input:
+#     print(offset.name)
+#     print(offset.type)
+#     print(offset.offset)
+
 generate_struct(offsets_input, struct_size_input)

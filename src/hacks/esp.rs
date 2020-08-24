@@ -28,9 +28,9 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: true,
+            teams: false,
             opacity: 200,
-            skeleton: true,
+            skeleton: false,
             extra_info_distance: 200.0,
         }
     }
@@ -49,10 +49,11 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &EspConfig, aimbot_contex
     let mut players = game_info.players.clone();
     let local_origin = &game_info.local_position;
     // sort players
-    players.sort_by(|a, b|
-        (a.origin - local_origin).length().partial_cmp(
-            &(b.origin - local_origin).length()).unwrap_or(Ordering::Equal));
-    players.reverse();
+    // players.sort_by(|a, b|
+    //     (a.origin - local_origin).length().partial_cmp(
+    //         &(b.origin - local_origin).length()).unwrap_or(Ordering::Equal));
+    // players.reverse()
+    // ;
 
     for player in &players {
         if player.character_id == game_info.local_player.character_id {

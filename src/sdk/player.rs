@@ -30,6 +30,7 @@ impl Player {
             stance: char_info.stance,
             ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
+            // ads: false,
             health: name_struct.health,
         }
     }
