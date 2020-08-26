@@ -47,6 +47,8 @@ fn players() {
 
     let players = players.expect("No players were found");
 
+    assert!(players.len() > 0);
+
     info!("Players: {:?}", players);
 }
 
@@ -69,7 +71,15 @@ fn get_local_player() {
 
 #[test]
 fn character_names() {
-    assert_ne!(GAME.get_players().unwrap().get(0).expect("didn't find any players").name, "");
+    trace!("{:?}", GAME.get_players().unwrap());
+    for player in &GAME.get_players().unwrap() {
+        trace!("Found player {:?}", player);
+        if player.name != "" {
+            return
+        }
+    }
+
+    panic!("No names found")
 }
 
 #[test]

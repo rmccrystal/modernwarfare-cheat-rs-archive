@@ -136,7 +136,7 @@ impl Game {
 
     pub fn in_game(&self) -> bool {
         return true;
-        read_memory::<i32>(self.base_address + offsets::GAMEMODE) > 1
+        // read_memory::<i32>(self.base_address + offsets::GAMEMODE) > 1
     }
 
     pub fn get_character_array(&self) -> Option<Vec<structs::character_info>> {
@@ -164,7 +164,8 @@ impl Game {
         let name_array_base: Address = read_memory(self.base_address + offsets::NAME_ARRAY);
 
         let character_id = character_id as u64;
-        let base = name_array_base + offsets::NAME_LIST_OFFSET + ((character_id + character_id * 8) << 4);
+        // let base = name_array_base + offsets::NAME_LIST_OFFSET + ((character_id + character_id * 8) << 4);
+        let base = name_array_base + offsets::NAME_LIST_OFFSET + (character_id * 0xD0);
         read_memory(base)
     }
 

@@ -28,7 +28,7 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: false,
+            teams: true,
             opacity: 200,
             skeleton: false,
             extra_info_distance: 200.0,
@@ -132,6 +132,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
                 .centered_horizontal(true)
         );
 
+        /*
         let health_color = Color::from_hsv((player.health as f32 / 127.0) * 120.0, 45.0, 100.0).opacity(config.opacity);
         // health bar
         overlay.draw_box(
@@ -148,6 +149,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
                 .color(health_color)
                 .filled(true)
         );
+         */
 
     }
 
@@ -167,10 +169,10 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         flag_offset += flag_height;
     };
 
-    // Draw distance
-    draw_flag(&format!("{}m", distance.round()), Color::from_hex(0xCCE8CC).opacity(config.opacity));
-
     let team_color = Color::new(rand::rngs::SmallRng::seed_from_u64(player.team as u64).next_u32()).opacity(255);
+
+    // Draw distance
+    draw_flag(&format!("{}m", distance.round()), team_color.opacity(config.opacity));
 
     if distance < config.extra_info_distance {
         match player.stance {
@@ -182,7 +184,7 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
         if player.ads {
             draw_flag("ADS", Color::from_hex(0xA75A97).opacity(config.opacity));
         }
-        draw_flag(&format!("{}", player.team), team_color.opacity(config.opacity));
+        // draw_flag(&format!("{}", player.team), team_color.opacity(config.opacity));
     }
 
     if config.skeleton {

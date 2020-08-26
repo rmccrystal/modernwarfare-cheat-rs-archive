@@ -28,10 +28,11 @@ impl Player {
             team: char_info.team,
             name: name_struct.get_name(),
             stance: char_info.stance,
-            ads: char_info.ads == 1,
+            // ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
-            // ads: false,
-            health: name_struct.health,
+            ads: false,
+            // health: name_struct.health,
+            health: 127
         }
     }
 
@@ -49,7 +50,7 @@ impl Player {
         match self.get_bone_position(&game, Bone::Head) {
             Ok(pos) => pos,
             Err(err) => {
-                // warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
+                warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
                 self.assume_head_position()
             }
         }
