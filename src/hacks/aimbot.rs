@@ -28,7 +28,7 @@ impl AimbotConfig {
     pub fn default() -> Self {
         Self {
             enabled: true,
-            teams: true,
+            teams: false,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 1.0,

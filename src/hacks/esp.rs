@@ -29,7 +29,7 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: true,
+            teams: false,
             opacity: 200,
             skeleton: false,
             extra_info_distance: 200.0,
@@ -134,7 +134,6 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
                 .centered_horizontal(true)
         );
 
-        /*
         let health_color = Color::from_hsv((player.health as f32 / 127.0) * 120.0, 45.0, 100.0).opacity(config.opacity);
         // health bar
         overlay.draw_box(
@@ -151,7 +150,6 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
                 .color(health_color)
                 .filled(true)
         );
-         */
 
     }
 

@@ -33,16 +33,28 @@ impl Player {
             return None;
         }
         let origin: Vector3 = read_memory(position_address + 0x40);
+        if origin.is_zero() {
+            return None;
+        }
+
+        let death: i32 = read_memory(position_address + 0xCF8);
+        if death != 0 {
+            return None;
+        }
 
         let stance: CharacterStance = read_memory(base_address + 0xD98);
         let entity_num: i32 = read_memory(base_address + 0x4D8);
+        let team: i32 = read_memory(base_address + 0x67C);
 
         let name_struct = game.get_name_struct(entity_num as u32);
+        if name_struct.health <= 0 {
+            return None;
+        }
 
         Some(Self {
             origin,
             character_id: entity_num,
-            team: -1,
+            team,
             name: name_struct.get_name(),
             stance,
             // ads: char_info.ads == 1,
@@ -61,7 +73,6 @@ impl Player {
             }
         }
 
-        return false;
         game_info.local_player.team == self.team
     }
 
@@ -79,7 +90,7 @@ impl Player {
         match self.get_bone_position(&game, Bone::Head) {
             Ok(pos) => pos,
             Err(err) => {
-                warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
+                // warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
                 self.assume_head_position()
             }
         }
