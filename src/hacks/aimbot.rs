@@ -10,7 +10,7 @@ use memlib::math::Vector3;
 #[derive(Clone, Debug)]
 pub struct AimbotConfig {
     pub enabled: bool,
-    pub team_check: bool,
+    pub teams: bool,
     pub bone: Bone,
     pub fov: f32,
     // FOV in degrees
@@ -28,7 +28,7 @@ impl AimbotConfig {
     pub fn default() -> Self {
         Self {
             enabled: true,
-            team_check: false,
+            teams: true,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 1.0,
@@ -106,7 +106,7 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
 }
 
 /// Returns the target to aim at or None otherwise
-fn get_target(game_info: &GameInfo, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &Vec<String>) -> Option<Player> {
+fn get_target(game_info: &GameInfo, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &[String]) -> Option<Player> {
     let local_player = &game_info.local_player;
     let mut player_list = game_info.players.clone();
 
@@ -121,10 +121,7 @@ fn get_target(game_info: &GameInfo, config: &AimbotConfig, get_aim_position: imp
     let mut best_score = 9999999.0;
 
     for player in player_list {
-        if config.team_check && player.team == local_player.team {
-            continue;
-        }
-        if friends.contains(&player.name) {
+        if !config.teams && player.is_teammate(&game_info, friends) {
             continue;
         }
 

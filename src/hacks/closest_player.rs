@@ -39,14 +39,14 @@ pub fn closest_player(game: &Game, global_config: &Config, overlay: &mut Overlay
     let mut closest_player: (Option<Player>, f32) = (None, 9999999999.0);
 
     for player in players {
-        if player.character_id == local_player.character_id || player.team == local_player.team {
+        if player.character_id == local_player.character_id {
+            continue;
+        }
+        if player.is_teammate(&game_info, &global_config.friends) {
             continue;
         }
         if config.ignore_downed && player.stance == CharacterStance::DOWNED {
             continue;
-        }
-        if global_config.friends.contains(&player.name) {
-            continue
         }
 
         let distance = units_to_m((player.origin - local_player.origin).length());

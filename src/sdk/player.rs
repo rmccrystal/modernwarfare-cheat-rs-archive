@@ -2,11 +2,12 @@
 
 use super::structs::{name_t};
 use memlib::math::{Vector3, Vector2};
-use memlib::memory::{read_memory, Address};
+use memlib::memory::{read_memory, Address, dump_memory};
 use super::{Game, bone};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
 use log::*;
+use crate::sdk::GameInfo;
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -27,11 +28,11 @@ impl Player {
             return None;
         }
 
-        let position_address: Address = read_memory(base_address + 0x1480);
+        let position_address: Address = read_memory(base_address + 0x438);
         if position_address > 0xFFFFFFFFFFFFFFF {
             return None;
         }
-        let origin: Vector3 = read_memory(read_memory(position_address + 0x40));
+        let origin: Vector3 = read_memory(position_address + 0x40);
 
         let stance: CharacterStance = read_memory(base_address + 0xD98);
         let entity_num: i32 = read_memory(base_address + 0x4D8);
@@ -49,8 +50,19 @@ impl Player {
             ads: false,
             // health: name_struct.health,
             health: name_struct.health,
-            base_address
+            base_address,
         })
+    }
+
+    pub fn is_teammate(&self, game_info: &GameInfo, friends: &[String]) -> bool {
+        for friend in friends {
+            if self.name.to_lowercase().contains(&friend.to_lowercase()) {
+                return true
+            }
+        }
+
+        return false;
+        game_info.local_player.team == self.team
     }
 
     pub fn get_bone_position(&self, game: &Game, bone: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
@@ -86,11 +98,11 @@ impl Player {
     fn get_bounding_box_bones(&self, game: &Game) -> Option<(Vector2, Vector2)> {
         // THe bones kind of flicker atm, so we will just use fallback
         return None;
-        let bones = vec![ Bone::Head, Bone::Neck, Bone::Chest, Bone::Mid, Bone::Tummy,
-        Bone::RightFoot1, Bone::RightFoot2, Bone::RightFoot3, Bone::RightFoot4,
-        Bone::LeftFoot1, Bone::LeftFoot2, Bone::LeftFoot3, Bone::LeftFoot4,
-        Bone::LeftHand1, Bone::LeftHand2, Bone::LeftHand3, Bone::LeftHand4,
-        Bone::RightHand1, Bone::RightHand2, Bone::RightHand3, Bone::RightHand4 ];
+        let bones = vec![Bone::Head, Bone::Neck, Bone::Chest, Bone::Mid, Bone::Tummy,
+                         Bone::RightFoot1, Bone::RightFoot2, Bone::RightFoot3, Bone::RightFoot4,
+                         Bone::LeftFoot1, Bone::LeftFoot2, Bone::LeftFoot3, Bone::LeftFoot4,
+                         Bone::LeftHand1, Bone::LeftHand2, Bone::LeftHand3, Bone::LeftHand4,
+                         Bone::RightHand1, Bone::RightHand2, Bone::RightHand3, Bone::RightHand4];
         let mut bone_locations = Vec::new();
 
         for bone in bones {
@@ -102,7 +114,7 @@ impl Player {
 
     fn get_boudning_box_fallback(&self, game: &Game) -> Option<(Vector2, Vector2)> {
         let head_pos = self.get_head_position(&game);
-        let head_pos = game.world_to_screen(&(head_pos + Vector3{x: 0.0, y: 0.0, z: 10.0}))?;
+        let head_pos = game.world_to_screen(&(head_pos + Vector3 { x: 0.0, y: 0.0, z: 10.0 }))?;
         let feet_pos = game.world_to_screen(&(self.origin))?;
 
         let height = feet_pos.y - head_pos.y;
@@ -121,8 +133,8 @@ impl Player {
         let bottom_y = feet_pos.y + size;
 
         Some((
-            Vector2{x: left_x, y: bottom_y},
-            Vector2{x: right_x, y: top_y}
+            Vector2 { x: left_x, y: bottom_y },
+            Vector2 { x: right_x, y: top_y }
         ))
     }
 

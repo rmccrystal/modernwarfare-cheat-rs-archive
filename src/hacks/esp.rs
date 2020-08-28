@@ -8,6 +8,7 @@ use crate::hacks::aimbot::AimbotContext;
 use crate::sdk::bone::Bone;
 use std::cmp::Ordering;
 use rand::{SeedableRng, RngCore};
+use crate::config::Config;
 
 #[derive(Copy, Clone, Debug)]
 pub struct EspConfig {
@@ -40,7 +41,8 @@ pub struct EspContext {
     highlighted_player: i32
 }
 
-pub fn esp(game: &Game, overlay: &mut Overlay, config: &EspConfig, aimbot_context: &AimbotContext) {
+pub fn esp(game: &Game, overlay: &mut Overlay, config: &Config, aimbot_context: &AimbotContext) {
+    let esp_config = &config.esp_config;
     let game_info = match game.game_info.as_ref() {
         Some(info) => info,
         None => return
@@ -59,7 +61,7 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &EspConfig, aimbot_contex
         if player.character_id == game_info.local_player.character_id {
             continue;
         }
-        if !config.teams && player.team == game_info.local_player.team {
+        if !esp_config.teams && player.is_teammate(&game_info, &config.friends) {
             continue;
         }
         let distance = units_to_m((game_info.local_player.origin - player.origin).length());
@@ -67,7 +69,7 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &EspConfig, aimbot_contex
             continue;
         }
         let highlighted = player.character_id == aimbot_context.aim_lock_player_id.unwrap_or(-1);
-        draw_esp(&game, overlay, &config, player, highlighted);
+        draw_esp(&game, overlay, &esp_config, player, highlighted);
     }
 }
 
