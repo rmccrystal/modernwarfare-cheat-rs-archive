@@ -52,12 +52,6 @@ fn players() {
     info!("Players: {:?}", players);
 }
 
-// Tests if the character_info_t size matches the one in the offsets
-#[test]
-fn character_info_t_size() {
-    assert_eq!(std::mem::size_of::<structs::character_info>(), offsets::client_base::SIZE);
-}
-
 #[test]
 fn camera() {
     GAME.get_camera_position().unwrap();

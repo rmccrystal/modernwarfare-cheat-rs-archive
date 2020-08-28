@@ -28,7 +28,7 @@ impl AimbotConfig {
     pub fn default() -> Self {
         Self {
             enabled: true,
-            team_check: true,
+            team_check: false,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 1.0,
@@ -80,7 +80,10 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
     // Get target
     let target = {
         if let Some(id) = ctx.aim_lock_player_id {
-            game.get_player_by_id(id)
+            match game.get_player_by_id(id) {
+                Some(pl) => Some(pl),
+                None => get_target(&game_info, &config, get_head_pos, &global_config.friends)
+            }
         } else {
             get_target(&game_info, &config, get_head_pos, &global_config.friends)
         }

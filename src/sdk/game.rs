@@ -7,9 +7,8 @@ use super::structs;
 use super::offsets;
 use super::player::Player;
 use memlib::math::{Angles2, Vector3, Vector2};
-use crate::sdk::structs::{character_info, refdef_t};
+use crate::sdk::structs::{refdef_t};
 use crate::sdk::world_to_screen::world_to_screen;
-use std::os::raw::c_uchar;
 
 /// Contains information about a game. Only exists when in a game
 #[derive(Clone)]
@@ -79,20 +78,30 @@ impl Game {
         if !self.in_game() {
             return None;
         }
-        let char_array = self.get_character_array()?;
+        let char_array = self.get_character_array_base()?;
 
-        let players = char_array.iter().map(|c| Player::new(&self, c))
-            .filter(|p| p.health > 0).collect();
+        // Read the character array
+        let mut player_addresses: Vec<Address> = {
+            let mut addresses = Vec::new();
+            for i in 0..155 {
+                addresses.push(char_array + (i * offsets::client_base::SIZE) as Address)
+            };
+            addresses
+        };
+
+        let players = player_addresses.
+            iter()
+            .map(|&addr| Player::new(&self, addr))
+            .filter(|player| player.is_some())
+            .map(|player| player.unwrap())
+            .collect();
+
         Some(players)
     }
 
     pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
-        let player_base = self.get_character_array_base()? + (id as u64 * std::mem::size_of::<character_info>() as u64);
-        let char_info: character_info = read_memory(player_base);
-        if !char_info.is_valid() {
-            return None;
-        }
-        Some(Player::new(&self, &char_info))
+        let player_base = self.get_character_array_base()? + (id as u64 * offsets::client_base::SIZE as u64);
+        Player::new(&self, player_base)
     }
 
     pub fn world_to_screen(&self, world_pos: &Vector3) -> Option<Vector2> {
@@ -137,27 +146,6 @@ impl Game {
     pub fn in_game(&self) -> bool {
         return true;
         // read_memory::<i32>(self.base_address + offsets::GAMEMODE) > 1
-    }
-
-    pub fn get_character_array(&self) -> Option<Vec<structs::character_info>> {
-        // Get the character array base address
-        let character_array_address: Address = self.get_character_array_base()?;
-        if character_array_address == 0 {
-            warn!("Read an invalid character_array_address");
-            return None;
-        }
-
-        // Read the character array
-        let mut character_array: Vec<structs::character_info> =
-            read_array::<_>(character_array_address, 155);
-
-        // Remove all the invalid characters
-        character_array.retain(character_info::is_valid);
-
-        trace!("Found {} characters", character_array.len());
-
-        // Return the character array
-        Some(character_array)
     }
 
     pub fn get_name_struct(&self, character_id: u32) -> structs::name_t {

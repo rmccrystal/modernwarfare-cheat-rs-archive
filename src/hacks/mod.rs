@@ -37,9 +37,7 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
         RenderState { game: game.clone(), config: config.clone(), aimbot_context: aimbot_context.clone() },
         overlay,
     );
-    let no_recoil_state_sender = no_recoil::start_no_recoil_thread();
-
-    game.get_character_array();
+    // let no_recoil_state_sender = no_recoil::start_no_recoil_thread();
 
     loop {
         timer.wait();
@@ -51,11 +49,11 @@ pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std
             config: config.clone(),
             aimbot_context: aimbot_context.clone(),
         }).expect("Failed to send RenderState");
-        no_recoil_state_sender.send(NoRecoilState {
-            enabled: config.no_recoil_enabled,
-            client_info_base: game.client_info_base,
-            in_game: game.in_game(),
-        }).expect("Failed to send NoRecoilState");
+        // no_recoil_state_sender.send(NoRecoilState {
+        //     enabled: config.no_recoil_enabled,
+        //     client_info_base: game.client_info_base,
+        //     in_game: game.in_game(),
+        // }).expect("Failed to send NoRecoilState");
 
         aimbot::aimbot(&game, &config, &mut aimbot_context);
 

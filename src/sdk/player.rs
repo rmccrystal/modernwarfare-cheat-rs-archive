@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
-use super::structs::{character_info, name_t};
+use super::structs::{name_t};
 use memlib::math::{Vector3, Vector2};
-use memlib::memory::{read_memory};
+use memlib::memory::{read_memory, Address};
 use super::{Game, bone};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
@@ -17,23 +17,40 @@ pub struct Player {
     pub stance: CharacterStance,
     pub health: i32,
     pub ads: bool,
+    pub base_address: Address,
 }
 
 impl Player {
-    pub fn new(game: &Game, char_info: &character_info) -> Self {
-        let name_struct = game.get_name_struct(char_info.entity_num as u32);
-        Self {
-            origin: char_info.get_position(),
-            character_id: char_info.entity_num,
-            team: char_info.team,
+    pub fn new(game: &Game, base_address: Address) -> Option<Self> {
+        let valid: i32 = read_memory(base_address + 0x9F4);
+        if valid != 1 {
+            return None;
+        }
+
+        let position_address: Address = read_memory(base_address + 0x1480);
+        if position_address > 0xFFFFFFFFFFFFFFF {
+            return None;
+        }
+        let origin: Vector3 = read_memory(read_memory(position_address + 0x40));
+
+        let stance: CharacterStance = read_memory(base_address + 0xD98);
+        let entity_num: i32 = read_memory(base_address + 0x4D8);
+
+        let name_struct = game.get_name_struct(entity_num as u32);
+
+        Some(Self {
+            origin,
+            character_id: entity_num,
+            team: -1,
             name: name_struct.get_name(),
-            stance: char_info.stance,
+            stance,
             // ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
             ads: false,
             // health: name_struct.health,
-            health: 127
-        }
+            health: name_struct.health,
+            base_address
+        })
     }
 
     pub fn get_bone_position(&self, game: &Game, bone: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
@@ -117,17 +134,6 @@ impl Player {
             CharacterStance::DOWNED => 20.0,
         };
         self.origin + Vector3 { x: 0.0, y: 0.0, z: delta_z }
-    }
-}
-
-
-impl character_info {
-    pub fn get_position(&self) -> Vector3 {
-        read_memory(self.position_pointer + 0x40)
-    }
-
-    pub fn get_bone_position(&self, game: &Game, bone_index: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
-        bone::get_bone_position(&game, self.entity_num, unsafe { std::mem::transmute(bone_index) })
     }
 }
 
