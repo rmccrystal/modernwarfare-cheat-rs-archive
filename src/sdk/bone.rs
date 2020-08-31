@@ -70,7 +70,7 @@ pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Resul
     let bone_ptr_index: u16 = read_memory(game.base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
     trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);
 
-    let bone_base = game.get_bone_base().ok_or("Could not find bone_base")?;
+    let bone_base = game.bone_base.ok_or("Could not find bone_base")?;
 
     let bone_ptr: Address = read_memory(bone_base + (bone_ptr_index as u64 * offsets::bones::INDEX_STRUCT_SIZE as u64) + 0xC0);
     if bone_ptr == 0 {
@@ -83,7 +83,7 @@ pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Resul
         return Err("Could not find bone_pos".into());
     }
 
-    let client_info = game.get_client_info_base().ok_or("Could not find client_info_base")?;
+    let client_info = game.client_info_base.ok_or("Could not find client_info_base")?;
     let base_pos: Vector3 = read_memory(client_info + offsets::bones::BASE_POS);
 
     bone_pos = bone_pos + base_pos;

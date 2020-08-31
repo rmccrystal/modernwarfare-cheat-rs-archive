@@ -15,7 +15,11 @@ lazy_static::lazy_static! {
         // Create a handle to the game
         let handle = memory::Handle::new(crate::PROCESS_NAME).expect("Failed to create a handle to MW");
 
-        Game::new(handle).unwrap()
+        let mut game = Game::new(handle).unwrap();
+
+        game.update();
+
+        game
     };
 }
 

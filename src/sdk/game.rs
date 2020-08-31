@@ -9,6 +9,7 @@ use super::player::Player;
 use memlib::math::{Angles2, Vector3, Vector2};
 use crate::sdk::structs::{refdef_t};
 use crate::sdk::world_to_screen::world_to_screen;
+use std::time::{Duration, Instant};
 
 /// Contains information about a game. Only exists when in a game
 #[derive(Clone)]
@@ -29,6 +30,8 @@ pub struct Game {
     pub character_array_base: Option<Address>,
     pub bone_base: Option<Address>,
     pub refdef: Option<Pointer<refdef_t>>,
+    address_update_frequency: Duration,
+    last_update: Instant
 }
 
 impl Game {
@@ -49,6 +52,8 @@ impl Game {
             bone_base: None,
             game_info: None,
             refdef: None,
+            address_update_frequency: Duration::from_secs(1),
+            last_update: Instant::now() - Duration::from_secs(1000),
         };
 
         game.update();
@@ -58,11 +63,19 @@ impl Game {
 
     /// This function updates the game data. Should be ran every game tick
     pub fn update(&mut self) {
+        if self.last_update + self.address_update_frequency < Instant::now() {
+            self.update_addresses();
+            self.last_update = Instant::now();
+        }
+
+        self.game_info = self.get_game_info();
+        self.refdef = encryption::get_refdef_pointer(self.base_address).ok()
+    }
+
+    pub fn update_addresses(&mut self) {
         self.bone_base = self.get_bone_base();
         self.character_array_base = self.get_character_array_base();
         self.client_info_base = self.get_client_info_base();
-        self.game_info = self.get_game_info();
-        self.refdef = encryption::get_refdef_pointer(self.base_address).ok()
     }
 
     pub fn get_game_info(&self) -> Option<GameInfo> {
@@ -78,13 +91,13 @@ impl Game {
         if !self.in_game() {
             return None;
         }
-        let char_array = self.get_character_array_base()?;
+        let char_array = self.character_array_base?;
 
         // Read the character array
         let mut player_addresses: Vec<Address> = {
             let mut addresses = Vec::new();
             for i in 0..155 {
-                addresses.push(char_array + (i * offsets::client_base::SIZE) as Address)
+                addresses.push(char_array + (i * offsets::character_info::SIZE) as Address)
             };
             addresses
         };
@@ -100,7 +113,7 @@ impl Game {
     }
 
     pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
-        let player_base = self.get_character_array_base()? + (id as u64 * offsets::client_base::SIZE as u64);
+        let player_base = self.character_array_base? + (id as u64 * offsets::character_info::SIZE as u64);
         Player::new(&self, player_base)
     }
 
@@ -158,7 +171,7 @@ impl Game {
     }
 
     pub fn get_local_index(&self) -> Option<i32> {
-        let ptr: Address = read_memory(self.get_client_info_base()? + offsets::LOCAL_INDEX_POINTER);
+        let ptr: Address = read_memory(self.client_info_base? + offsets::LOCAL_INDEX_POINTER);
         Some(read_memory(ptr + offsets::LOCAL_INDEX_OFFSET))
     }
 }
@@ -174,7 +187,7 @@ impl Game {
     }
 
     pub fn get_character_array_base(&self) -> Option<Address> {
-        let client_info = self.get_client_info_base()?;
+        let client_info = self.client_info_base?;
         let client_base = encryption::get_client_base_address(self.base_address, client_info);
         if let Err(error) = &client_base {
             warn!("Failed to find client_base address with error: {}", error);

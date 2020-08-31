@@ -29,7 +29,7 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: false,
+            teams: true,
             opacity: 200,
             skeleton: false,
             extra_info_distance: 200.0,

@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use super::structs::{name_t};
+use super::offsets::character_info;
 use memlib::math::{Vector3, Vector2};
 use memlib::memory::{read_memory, Address, dump_memory};
 use super::{Game, bone};
@@ -23,31 +24,36 @@ pub struct Player {
 
 impl Player {
     pub fn new(game: &Game, base_address: Address) -> Option<Self> {
-        let valid: i32 = read_memory(base_address + 0x9F4);
+        let valid: i32 = read_memory(base_address + character_info::VALID);
         if valid != 1 {
+            trace!("Invalidated player because valid was {}", valid);
             return None;
         }
 
-        let position_address: Address = read_memory(base_address + 0x438);
+        let position_address: Address = read_memory(base_address + character_info::POS_PTR);
         if position_address > 0xFFFFFFFFFFFFFFF {
+            trace!("Invalidated player because position_address was 0x{:X}", position_address);
             return None;
         }
         let origin: Vector3 = read_memory(position_address + 0x40);
         if origin.is_zero() {
+            trace!("Invalidated player because origin was {:?}", origin);
             return None;
         }
 
-        let death: i32 = read_memory(position_address + 0xCF8);
-        if death != 0 {
-            return None;
-        }
+        // let death: i32 = read_memory(position_address + 0xCF8);
+        // if death != 0 {
+        //     return None;
+        // }
 
-        let stance: CharacterStance = read_memory(base_address + 0xD98);
-        let entity_num: i32 = read_memory(base_address + 0x4D8);
-        let team: i32 = read_memory(base_address + 0x67C);
+        let stance: CharacterStance = read_memory(base_address + character_info::STANCE);
+        let entity_num: i32 = read_memory(base_address + character_info::ENTITY_NUM);
+        let team: i32 = read_memory(base_address + character_info::TEAM);
+        let ads: i32 = read_memory(base_address + character_info::ADS);
 
         let name_struct = game.get_name_struct(entity_num as u32);
         if name_struct.health <= 0 {
+            trace!("Invalidated player because health was {}", name_struct.health);
             return None;
         }
 
@@ -59,7 +65,7 @@ impl Player {
             stance,
             // ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
-            ads: false,
+            ads: ads == 1,
             // health: name_struct.health,
             health: name_struct.health,
             base_address,
