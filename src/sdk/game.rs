@@ -66,10 +66,10 @@ impl Game {
         if self.last_update + self.address_update_frequency < Instant::now() {
             self.update_addresses();
             self.last_update = Instant::now();
+            self.refdef = encryption::get_refdef_pointer(self.base_address).ok()
         }
 
         self.game_info = self.get_game_info();
-        self.refdef = encryption::get_refdef_pointer(self.base_address).ok()
     }
 
     pub fn update_addresses(&mut self) {

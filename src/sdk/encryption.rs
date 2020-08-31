@@ -139,17 +139,15 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     let not_peb = Wrapping(not_peb);
     let game_base_address = Wrapping(game_base_address);
 
-    let mut rcx = last_key * encrypted_address;
-    encrypted_address = !(not_peb) + rcx;
-    encrypted_address += (game_base_address + Wrapping(0xC0A1));
-    encrypted_address ^= (encrypted_address >> 0x17);
-    rcx = not_peb * (game_base_address + Wrapping(0x9F73));
-    rcx ^= (encrypted_address >> 0x2E);
-    encrypted_address ^= rcx;
-    encrypted_address ^= Wrapping(0x115D6581217E143B);
-    encrypted_address += not_peb;
-    encrypted_address *= Wrapping(0x0E6FB9F3EA262EDEB);
-    encrypted_address *= Wrapping(0x0AC128C4EA8FE93FB);
+    encrypted_address ^= (encrypted_address >> 0x1B);
+    encrypted_address ^= (encrypted_address >> 0x36);
+    encrypted_address *= Wrapping(0xC2A20632420B575);
+    encrypted_address += ((not_peb + game_base_address) * Wrapping(0xDFA3C998BC78F905));
+    encrypted_address += !not_peb;
+    encrypted_address -= game_base_address;
+    encrypted_address += Wrapping(0x614E7929FA82DC2B);
+    encrypted_address *= last_key;
+    encrypted_address ^= game_base_address;
 
     trace!("Found decrypted bone_base address: 0x{:X}", encrypted_address.0);
 

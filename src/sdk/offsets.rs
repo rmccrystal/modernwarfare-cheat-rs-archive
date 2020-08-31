@@ -58,8 +58,8 @@ pub mod bones {
     use memlib::memory::Address;
 
     pub const ENCRYPTED_PTR: Address = 0x1226F898;
-    pub const REVERSED_ADDRESS: Address = 0x4DD4198;
-    pub const DISPLACEMENT: Address = 0x15;
+    pub const REVERSED_ADDRESS: Address = 0x4DF2218;
+    pub const DISPLACEMENT: Address = 0x17;
     pub const BASE_POS: Address = 0x49B3C;
     pub const INDEX_STRUCT_SIZE: usize = 0x150;
 }
