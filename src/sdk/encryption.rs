@@ -70,14 +70,37 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     let mut encrypted_address = Wrapping(encrypted_address);
     let last_key = Wrapping(last_key);
     let not_peb = Wrapping(not_peb);
+    let peb = !not_peb;
     let game_base_address = Wrapping(game_base_address);
 
-    encrypted_address *= last_key;
-    encrypted_address ^= encrypted_address >> 0x25;
-    encrypted_address ^= Wrapping(0xB25F8618FABEB309);
-    encrypted_address += game_base_address;
-    encrypted_address *= Wrapping(0xD388FC25351BE963);
-    encrypted_address -= not_peb;
+    let mut rbx = encrypted_address;
+    let mut r8 = peb;
+    r8 = !r8;
+    let mut rax = r8;
+    let mut rdx = game_base_address + Wrapping(0x4F1FC281);
+    rax *= rdx;
+    rax += rbx;
+    let mut rcx = last_key;
+    rcx *= rax;
+    rdx = rcx;
+    rdx = (rdx >> 0x25);
+    rdx ^= rcx;
+    rax = Wrapping(0x5BB45825089AC26D);
+    rdx *= rax;
+    rax = rdx;
+    rax = rax >> 0x16;
+    rdx ^= rax;
+    rbx = rdx;
+    rbx = (rbx >> 0x2C);
+    rbx ^= rdx;
+    rbx -= r8;
+
+    encrypted_address = rbx;
+
+    if encrypted_address.0 > 0xFFFFFFFFFFFFFF {
+        trace!("Invalidated client_info because the address was too large: 0x{:X}", encrypted_address.0);
+        return Err("Address was too large".into());
+    }
 
     trace!("Found decrypted client_info address: 0x{:X}", encrypted_address.0);
 
@@ -85,6 +108,8 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
 }
 
 pub fn get_client_base_address(game_base_address: Address, client_info_address: Address) -> Result<Address> {
+    trace!("client_info_address: 0x{:X}", client_info_address);
+
     let encrypted_address = read_memory(client_info_address + offsets::client_base::BASE_OFFSET);
     if encrypted_address == 0 {
         return Err("Could not find the encrypted client_info_base address".into());
@@ -99,23 +124,43 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     let mut encrypted_address = Wrapping(encrypted_address);
     let mut last_key = Wrapping(last_key);
     let not_peb = Wrapping(not_peb);
+    let peb = !not_peb;
     let game_base_address = Wrapping(game_base_address);
 
     // Actual decryption
-    encrypted_address -= Wrapping(0x278DD93891CFE437);
-    encrypted_address ^= encrypted_address >> 0x05;
-    encrypted_address ^= encrypted_address >> 0x0A;
-    encrypted_address ^= encrypted_address >> 0x14;
-    encrypted_address ^= encrypted_address >> 0x28;
-    encrypted_address += not_peb * (game_base_address + Wrapping(0x4B441EBF));
+    let mut rax = encrypted_address;
+    let mut rcx = rax;
+    rcx = (rcx >> 0x21);
+    rax ^= rcx;
+    let mut rbx = peb;
+    rbx = !rbx;
+    rax += rbx;
+    let mut rdi = game_base_address;
+    rax ^= rdi;
+    rax *= last_key;
+    rcx = game_base_address + Wrapping(0x19FC);
+    rcx = !rcx;
+    rcx += rbx;
+    rax ^= rcx;
+    rcx = rax;
+    rcx = (rcx >> 0x22);
+    rax ^= rcx;
+    rcx = Wrapping(0x8FF89804D8D3771);
+    rax *= rcx;
+    rcx = rax;
+    rcx = (rcx >> 0x5);
+    rax ^= rcx;
+    rcx = rax;
+    rcx = (rcx >> 0xA);
+    rax ^= rcx;
+    rcx = rax;
+    rcx = (rcx >> 0x14);
+    rax ^= rcx;
+    rcx = rax;
+    rcx = (rcx >> 0x28);
+    rax ^= rcx;
 
-    let mut rdx = (game_base_address + Wrapping(0x244B0BF7)) - not_peb;
-    let mut rcx = Wrapping(0x105BC4DE416DCA41) ^ encrypted_address;
-    rcx *= Wrapping(0xEAECC5EC50ADE36D);
-
-    encrypted_address = rdx ^ rcx;
-    encrypted_address *= last_key;
-    encrypted_address += not_peb;
+    encrypted_address = rax;
 
     trace!("Found decrypted client_info_base address: 0x{:X}", encrypted_address.0);
 
@@ -129,7 +174,7 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     }
     trace!("Found encrypted bone_base address: 0x{:X}", encrypted_address);
 
-    let last_key = get_last_key(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)
+    let last_key = get_last_key_byteswap(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting base_address")?;
 
     let not_peb = get_not_peb();

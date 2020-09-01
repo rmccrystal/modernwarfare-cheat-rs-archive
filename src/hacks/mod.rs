@@ -22,7 +22,7 @@ pub mod esp;
 // The main loop of the cheat
 // Returns an error if there is an error with any of the tick functions
 pub fn hack_loop(mut game: Game, mut overlay: Overlay) -> Result<(), Box<dyn std::error::Error>> {
-    // crate::sdk::debug::scan_local_player::<i32>(&game, true);
+    // crate::sdk::debug::scan_local_player::<bool>(&game, false);
 
     // Use the default config. We can change this later to load from a file
     let config = Config::default();

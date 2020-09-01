@@ -31,7 +31,7 @@ fn run() -> Result<(), Box<dyn Error>> {
     let overlay = Box::new(overlay::looking_glass::LookingGlassOverlay::new(
         "/tmp/overlay-pipe",
         false,
-        4
+        6
     ).expect("Failed to create overlay"));
 
     // Create a game struct from the handle

@@ -12,7 +12,7 @@ use crate::sdk::world_to_screen::world_to_screen;
 use std::time::{Duration, Instant};
 
 /// Contains information about a game. Only exists when in a game
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GameInfo {
     pub players: Vec<Player>,
     pub local_position: Vector3,
@@ -22,7 +22,7 @@ pub struct GameInfo {
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Game {
     pub base_address: Address,
     pub game_info: Option<GameInfo>,
@@ -57,6 +57,7 @@ impl Game {
         };
 
         game.update();
+        game.update_addresses();
 
         Ok(game)
     }
@@ -151,9 +152,36 @@ impl Game {
     }
 
     pub fn get_local_player(&self) -> Option<Player> {
+        return self.get_local_player_fallback();
         let local_index = self.get_local_index()?;
         trace!("Local index: {}", local_index);
         self.get_player_by_id(local_index)
+    }
+
+    // Gets the local player by finding the closest player to the camera
+    fn get_local_player_fallback(&self) -> Option<Player> {
+        let players = self.get_players()?;
+        let camera_pos = self.get_camera_position()?;
+
+        if players.len() == 0 {
+            return None;
+        }
+
+        let mut closest_player: (&Player, f32) = (&players[0], 999999999.0);
+
+        for player in &players {
+            let head_pos = player.get_head_position(&self);
+            let dist = (camera_pos - head_pos).length();
+            if dist < closest_player.1 {
+                closest_player.0 = player;
+                closest_player.1 = dist;
+                trace!("Found new closest player to camera: {}, {}m", player.name, units_to_m(dist));
+            }
+        }
+
+        trace!("Found local player using fallback method: {}, {}m from camera", closest_player.0.name, closest_player.1);
+
+        Some(closest_player.0.clone())
     }
 
     pub fn in_game(&self) -> bool {

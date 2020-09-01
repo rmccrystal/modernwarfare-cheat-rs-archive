@@ -51,7 +51,7 @@ fn players() {
 
     let players = players.expect("No players were found");
 
-    assert!(players.len() > 0);
+    assert!(!players.is_empty());
 
     info!("Players: {:?}", players);
 }

@@ -50,6 +50,7 @@ impl Player {
         let entity_num: i32 = read_memory(base_address + character_info::ENTITY_NUM);
         let team: i32 = read_memory(base_address + character_info::TEAM);
         let ads: i32 = read_memory(base_address + character_info::ADS);
+        let reloading: bool = read_memory(base_address + character_info::RELOAD);
 
         let name_struct = game.get_name_struct(entity_num as u32);
         if name_struct.health <= 0 {
@@ -66,7 +67,6 @@ impl Player {
             // ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
             ads: ads == 1,
-            // health: name_struct.health,
             health: name_struct.health,
             base_address,
         })
