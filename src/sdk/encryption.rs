@@ -5,6 +5,15 @@ use std::num::Wrapping;
 use super::offsets;
 use crate::sdk::structs::{refdef_t};
 
+#[cxx::bridge]
+mod ffi {
+    extern "C" {
+        include!("modernwarfare-cheat-rs/src/sdk/encryption.h");
+
+        pub fn test() -> i32;
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, Default)]
 pub struct refdef_key_struct {
@@ -12,21 +21,6 @@ pub struct refdef_key_struct {
     pub ref1: u32,
     pub ref2: u32,
 }
-
-/*
-pub fn get_refdef_pointer(game_base_address: Address) -> Result<Pointer<refdef_t>> {
-    let keys =
-
-    trace!("Lower: {:X}, upper: {:X}", lower, upper);
-
-    let result_address: u64 = upper << 32 | lower;
-
-    trace!("Result_address: {:X}", result_address);
-
-    // Ok(Pointer::new(result_address))
-    Err("".into())
-}
- */
 
 pub fn get_refdef_pointer(game_base_address: Address) -> Result<Pointer<refdef_t>> {
     let crypt: refdef_key_struct = read_memory(game_base_address + offsets::REFDEF as u64);
@@ -60,7 +54,7 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     trace!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
     // Get last_key
-    let last_key = get_last_key(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)
+    let last_key: u64 = get_last_key(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting the client_info base address")?;
 
     // Get not_peb
@@ -72,6 +66,8 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     let not_peb = Wrapping(not_peb);
     let peb = !not_peb;
     let game_base_address = Wrapping(game_base_address);
+
+    unsafe { ffi::test() };
 
     let mut rbx = encrypted_address;
     let mut r8 = peb;

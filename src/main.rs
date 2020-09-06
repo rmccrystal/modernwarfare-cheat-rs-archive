@@ -25,14 +25,16 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     // Init system by connecting to RPC running on guest
     info!("Connecting to system host");
-    system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
+    // system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
+    system::init().unwrap();
 
     // Init the overlay
-    let overlay = Box::new(overlay::looking_glass::LookingGlassOverlay::new(
-        "/tmp/overlay-pipe",
-        false,
-        6
-    ).expect("Failed to create overlay"));
+    // let overlay = Box::new(overlay::looking_glass::LookingGlassOverlay::new(
+    //     "/tmp/overlay-pipe",
+    //     false,
+    //     6
+    // ).expect("Failed to create overlay"));
+    let overlay = Box::new(overlay::null_overlay::NullOverlay);
 
     // Create a game struct from the handle
     let game = sdk::Game::new(handle)?;

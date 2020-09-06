@@ -149,6 +149,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "codespan-reporting"
+version = "0.9.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e0762455306b1ed42bc651ef6a2197aabda5e1d4a43c34d5eab5c1a3634e81d"
+dependencies = [
+ "termcolor",
+ "unicode-width",
+]
+
+[[package]]
 name = "colored"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -185,6 +195,48 @@ dependencies = [
  "core-foundation",
  "foreign-types",
  "libc",
+]
+
+[[package]]
+name = "cxx"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b70f35c763762aa9cf8d3d480a9bebb8841cdd0a6545ad4e45196e8f4126f1e2"
+dependencies = [
+ "cc",
+ "cxxbridge-flags",
+ "cxxbridge-macro",
+ "link-cplusplus",
+]
+
+[[package]]
+name = "cxx-build"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b585e42b4b5bbfef81d52b8af19fe11b2ddcf9fc1a8dd8cebdd789479b0ca2de"
+dependencies = [
+ "cc",
+ "codespan-reporting",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "cxxbridge-flags"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39908113402f1559d2892ed92355c11d2b7e2140856bfb7ca0b038b9529b34ae"
+
+[[package]]
+name = "cxxbridge-macro"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d23dab1140482448bcd05bc980755eaa042c2eda4d121abdd12befb10eab23a7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -461,6 +513,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "link-cplusplus"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f563b3814ea63e830e3e321206e4e2b5177854586ebe3f595795ed7053b217f5"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "log"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -503,6 +564,7 @@ dependencies = [
  "tokio",
  "tokio-serde",
  "vmread",
+ "widestring",
  "win_key_codes",
  "winapi 0.3.9",
 ]
@@ -553,6 +615,8 @@ dependencies = [
 name = "modernwarfare-cheat-rs"
 version = "0.1.0"
 dependencies = [
+ "cxx",
+ "cxx-build",
  "lazy_static",
  "log",
  "memlib",
@@ -1082,6 +1146,12 @@ checksum = "d011071ae14a2f6671d0b74080ae0cd8ebf3a6f8c9589a2cd45f23126fe29724"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "widestring"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a763e303c0e0f23b0da40888724762e802a8ffefbc22de4127ef42493c2ea68c"
 
 [[package]]
 name = "win_key_codes"
