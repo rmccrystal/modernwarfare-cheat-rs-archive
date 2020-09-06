@@ -10,7 +10,9 @@ mod ffi {
     extern "C" {
         include!("modernwarfare-cheat-rs/src/sdk/encryption.h");
 
-        pub fn test() -> i32;
+        pub fn decrypt_client_info(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
+        pub fn decrypt_client_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
+        pub fn decrypt_bone(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
     }
 }
 
@@ -57,50 +59,16 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     let last_key: u64 = get_last_key(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting the client_info base address")?;
 
-    // Get not_peb
-    let not_peb = get_not_peb();
-    trace!("not_peb: 0x{:X}", not_peb);
+    let encrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, last_key, get_peb()) };
 
-    let mut encrypted_address = Wrapping(encrypted_address);
-    let last_key = Wrapping(last_key);
-    let not_peb = Wrapping(not_peb);
-    let peb = !not_peb;
-    let game_base_address = Wrapping(game_base_address);
-
-    unsafe { ffi::test() };
-
-    let mut rbx = encrypted_address;
-    let mut r8 = peb;
-    r8 = !r8;
-    let mut rax = r8;
-    let mut rdx = game_base_address + Wrapping(0x4F1FC281);
-    rax *= rdx;
-    rax += rbx;
-    let mut rcx = last_key;
-    rcx *= rax;
-    rdx = rcx;
-    rdx = (rdx >> 0x25);
-    rdx ^= rcx;
-    rax = Wrapping(0x5BB45825089AC26D);
-    rdx *= rax;
-    rax = rdx;
-    rax = rax >> 0x16;
-    rdx ^= rax;
-    rbx = rdx;
-    rbx = (rbx >> 0x2C);
-    rbx ^= rdx;
-    rbx -= r8;
-
-    encrypted_address = rbx;
-
-    if encrypted_address.0 > 0xFFFFFFFFFFFFFF {
-        trace!("Invalidated client_info because the address was too large: 0x{:X}", encrypted_address.0);
+    if encrypted_address > 0xFFFFFFFFFFFFFF {
+        trace!("Invalidated client_info because the address was too large: 0x{:X}", encrypted_address);
         return Err("Address was too large".into());
     }
 
-    trace!("Found decrypted client_info address: 0x{:X}", encrypted_address.0);
+    trace!("Found decrypted client_info address: 0x{:X}", encrypted_address);
 
-    Ok(encrypted_address.0)
+    Ok(encrypted_address)
 }
 
 pub fn get_client_base_address(game_base_address: Address, client_info_address: Address) -> Result<Address> {
@@ -115,52 +83,11 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     let last_key = get_last_key(game_base_address, offsets::client_base::BASE_REVERSED_ADDR, offsets::client_base::BASE_DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting client_info_base")?;
 
-    let not_peb = get_not_peb();
+    let encrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, last_key, get_peb() )};
 
-    let mut encrypted_address = Wrapping(encrypted_address);
-    let mut last_key = Wrapping(last_key);
-    let not_peb = Wrapping(not_peb);
-    let peb = !not_peb;
-    let game_base_address = Wrapping(game_base_address);
+    trace!("Found decrypted client_info_base address: 0x{:X}", encrypted_address);
 
-    // Actual decryption
-    let mut rax = encrypted_address;
-    let mut rcx = rax;
-    rcx = (rcx >> 0x21);
-    rax ^= rcx;
-    let mut rbx = peb;
-    rbx = !rbx;
-    rax += rbx;
-    let mut rdi = game_base_address;
-    rax ^= rdi;
-    rax *= last_key;
-    rcx = game_base_address + Wrapping(0x19FC);
-    rcx = !rcx;
-    rcx += rbx;
-    rax ^= rcx;
-    rcx = rax;
-    rcx = (rcx >> 0x22);
-    rax ^= rcx;
-    rcx = Wrapping(0x8FF89804D8D3771);
-    rax *= rcx;
-    rcx = rax;
-    rcx = (rcx >> 0x5);
-    rax ^= rcx;
-    rcx = rax;
-    rcx = (rcx >> 0xA);
-    rax ^= rcx;
-    rcx = rax;
-    rcx = (rcx >> 0x14);
-    rax ^= rcx;
-    rcx = rax;
-    rcx = (rcx >> 0x28);
-    rax ^= rcx;
-
-    encrypted_address = rax;
-
-    trace!("Found decrypted client_info_base address: 0x{:X}", encrypted_address.0);
-
-    Ok(encrypted_address.0)
+    Ok(encrypted_address)
 }
 
 pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
@@ -173,7 +100,7 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     let last_key = get_last_key_byteswap(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)
         .ok_or_else(|| "Could not get last_key for decrypting base_address")?;
 
-    let not_peb = get_not_peb();
+    let not_peb = get_peb();
 
     let mut encrypted_address = Wrapping(encrypted_address);
     let last_key = Wrapping(last_key);
@@ -195,7 +122,7 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     Ok(encrypted_address.0)
 }
 
-fn get_not_peb() -> u64 {
+fn get_peb() -> u64 {
     !get_process_info().peb_base_address
 }
 

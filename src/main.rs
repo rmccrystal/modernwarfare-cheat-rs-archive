@@ -21,7 +21,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     MinimalLogger::init(LOG_LEVEL)?;
 
     // Create a handle to the game
-    let handle = memory::Handle::new(PROCESS_NAME)?;
+    let handle = memory::Handle::from_boxed_interface(
+        Box::new(memory::handle_interfaces::driver_handle::DriverProcessHandle::attach(PROCESS_NAME)?)
+    );
 
     // Init system by connecting to RPC running on guest
     info!("Connecting to system host");
