@@ -59,6 +59,8 @@ impl Game {
         game.update();
         game.update_addresses();
 
+        info!("Game initialized");
+
         Ok(game)
     }
 
