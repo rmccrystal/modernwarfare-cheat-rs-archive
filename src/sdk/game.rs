@@ -152,7 +152,7 @@ impl Game {
     }
 
     pub fn get_local_player(&self) -> Option<Player> {
-        return self.get_local_player_fallback();
+        // return self.get_local_player_fallback();
         let local_index = self.get_local_index()?;
         trace!("Local index: {}", local_index);
         self.get_player_by_id(local_index)

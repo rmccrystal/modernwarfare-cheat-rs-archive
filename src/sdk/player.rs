@@ -3,7 +3,7 @@
 use super::structs::{name_t};
 use super::offsets::character_info;
 use memlib::math::{Vector3, Vector2};
-use memlib::memory::{read_memory, Address, dump_memory};
+use memlib::memory::{read_memory, Address, dump_memory, try_read_memory};
 use super::{Game, bone};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
@@ -24,7 +24,7 @@ pub struct Player {
 
 impl Player {
     pub fn new(game: &Game, base_address: Address) -> Option<Self> {
-        let valid: i32 = read_memory(base_address + character_info::VALID);
+        let valid: i32 = try_read_memory(base_address + character_info::VALID).ok()?;
         if valid != 1 {
             trace!("Invalidated player because valid was {}", valid);
             return None;
@@ -57,6 +57,8 @@ impl Player {
             trace!("Invalidated player because health was {}", name_struct.health);
             return None;
         }
+
+        trace!("Creating new player with character_id {}", entity_num);
 
         Some(Self {
             origin,

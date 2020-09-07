@@ -12,7 +12,7 @@ mod ffi {
 
         pub fn decrypt_client_info(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
         pub fn decrypt_client_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
-        pub fn decrypt_bone(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
+        pub fn decrypt_bone_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
     }
 }
 
@@ -56,19 +56,20 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     trace!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
     // Get last_key
-    let last_key: u64 = get_last_key(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)
-        .ok_or_else(|| "Could not get last_key for decrypting the client_info base address")?;
+    let last_key = get_last_key_byteswap(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)?;
 
-    let encrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, last_key, get_peb()) };
+    trace!("Found client_info last_key: 0x{:X}", last_key);
 
-    if encrypted_address > 0xFFFFFFFFFFFFFF {
-        trace!("Invalidated client_info because the address was too large: 0x{:X}", encrypted_address);
+    let decrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, last_key, get_peb()) };
+
+    if decrypted_address > 0xFFFFFFFFFFFFFF {
+        trace!("Invalidated client_info because the address was too large: 0x{:X}", decrypted_address);
         return Err("Address was too large".into());
     }
 
-    trace!("Found decrypted client_info address: 0x{:X}", encrypted_address);
+    debug!("Found decrypted client_info address: 0x{:X}", decrypted_address);
 
-    Ok(encrypted_address)
+    Ok(decrypted_address)
 }
 
 pub fn get_client_base_address(game_base_address: Address, client_info_address: Address) -> Result<Address> {
@@ -80,70 +81,54 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     }
     trace!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
 
-    let last_key = get_last_key(game_base_address, offsets::client_base::BASE_REVERSED_ADDR, offsets::client_base::BASE_DISPLACEMENT)
-        .ok_or_else(|| "Could not get last_key for decrypting client_info_base")?;
+    let last_key = get_last_key_byteswap(game_base_address, offsets::client_base::BASE_REVERSED_ADDR, offsets::client_base::BASE_DISPLACEMENT)?;
 
-    let encrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, last_key, get_peb() )};
+    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, last_key, get_peb() )};
 
-    trace!("Found decrypted client_info_base address: 0x{:X}", encrypted_address);
+    debug!("Found decrypted client_info_base address: 0x{:X}", decrypted_address);
 
-    Ok(encrypted_address)
+    Ok(decrypted_address)
 }
 
 pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
-    let encrypted_address = read_memory(game_base_address + offsets::bones::ENCRYPTED_PTR);
+    let encrypted_address = try_read_memory(game_base_address + offsets::bones::ENCRYPTED_PTR)?;
     if encrypted_address == 0 {
         return Err("Could not find the encrypted bone_base address".into());
     }
     trace!("Found encrypted bone_base address: 0x{:X}", encrypted_address);
 
-    let last_key = get_last_key_byteswap(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)
-        .ok_or_else(|| "Could not get last_key for decrypting base_address")?;
+    let last_key = get_last_key(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)?;
 
-    let not_peb = get_peb();
+    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, last_key, get_peb() )};
 
-    let mut encrypted_address = Wrapping(encrypted_address);
-    let last_key = Wrapping(last_key);
-    let not_peb = Wrapping(not_peb);
-    let game_base_address = Wrapping(game_base_address);
-
-    encrypted_address ^= (encrypted_address >> 0x1B);
-    encrypted_address ^= (encrypted_address >> 0x36);
-    encrypted_address *= Wrapping(0xC2A20632420B575);
-    encrypted_address += ((not_peb + game_base_address) * Wrapping(0xDFA3C998BC78F905));
-    encrypted_address += !not_peb;
-    encrypted_address -= game_base_address;
-    encrypted_address += Wrapping(0x614E7929FA82DC2B);
-    encrypted_address *= last_key;
-    encrypted_address ^= game_base_address;
-
-    trace!("Found decrypted bone_base address: 0x{:X}", encrypted_address.0);
-
-    Ok(encrypted_address.0)
+    trace!("Found decrypted bone_base address: 0x{:X}", decrypted_address);
+    Ok(decrypted_address)
 }
 
 fn get_peb() -> u64 {
-    !get_process_info().peb_base_address
+    let peb = get_process_info().peb_base_address;
+    trace!("peb: {:#X}", peb);
+    peb
 }
 
-fn get_last_key(game_base_address: Address, reversed_address_offset: Address, displacement_offset: Address) -> Option<Address> {
-    let reversed_address: Address = read_memory(game_base_address + reversed_address_offset);
-    let last_key = read_memory(!reversed_address + displacement_offset);
+fn get_last_key(game_base_address: Address, reversed_address_offset: Address, displacement_offset: Address) -> Result<Address> {
+    let reversed_address: Address = try_read_memory(game_base_address + reversed_address_offset)?;
+    let last_key = try_read_memory(!reversed_address + displacement_offset)?;
 
     if last_key == 0 {
-        return None;
+        return Err("last_key was 0".into());
     }
 
-    Some(last_key)
+    Ok(last_key)
 }
 
-fn get_last_key_byteswap(game_base_address: Address, reversed_address_offset: Address, displacement_offset: Address) -> Option<Address> {
-    let reversed_address: Address = read_memory(game_base_address + reversed_address_offset);
-    let last_key = read_memory(u64::from_be(reversed_address) + displacement_offset);
+fn get_last_key_byteswap(game_base_address: Address, reversed_address_offset: Address, displacement_offset: Address) -> Result<Address> {
+    let reversed_address: Address = try_read_memory(game_base_address + reversed_address_offset).unwrap();
+    let last_key = try_read_memory(u64::from_be(reversed_address) + displacement_offset).unwrap();
 
     if last_key == 0 {
-        return None;
+        return Err("last_key was 0".into());
     }
 
-    Some(last_key)
+    Ok(last_key)
 }

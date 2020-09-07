@@ -28,7 +28,7 @@ impl AimbotConfig {
     pub fn default() -> Self {
         Self {
             enabled: true,
-            teams: false,
+            teams: true,
             bone: Bone::Head,
             fov: 30.0,
             smooth: 1.0,
@@ -167,7 +167,7 @@ fn aim_at(game_info: &GameInfo, target: &Player, config: &AimbotConfig, get_aim_
 
     let delta = math::calculate_relative_angles(&local_position, &target_position, &local_view_angles);
 
-    debug!("Aiming at {}\t({}m)\t({}°)\t({})\t({:?})",
+    info!("Aiming at {}\t({}m)\t({}°)\t({})\t({:?})",
            target.name,
            units_to_m((target_position - local_position).length()),
            delta.length(),

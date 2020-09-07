@@ -11,10 +11,10 @@ mod hacks;
 mod config;
 mod gui;
 
-pub const PROCESS_NAME: &str = "modernwarfare.exe";
+pub const PROCESS_NAME: &str = "ModernWarfare.exe";
 pub const CHEAT_TICKRATE: u64 = 50;
 
-const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
+const LOG_LEVEL: LevelFilter = LevelFilter::Info;
 
 fn run() -> Result<(), Box<dyn Error>> {
     // Initialize the logger

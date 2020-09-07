@@ -59,9 +59,9 @@ pub mod client_base {
 pub mod bones {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x1228D918;
-    pub const REVERSED_ADDRESS: Address = 0x4DF2218;
-    pub const DISPLACEMENT: Address = 0x17;
+    pub const ENCRYPTED_PTR: Address = 0x121F7548;
+    pub const REVERSED_ADDRESS: Address = 0x4D471DF;
+    pub const DISPLACEMENT: Address = 0xD;
     pub const BASE_POS: Address = 0x6D2E4;
     pub const INDEX_STRUCT_SIZE: usize = 0x150;
 }
