@@ -18,7 +18,9 @@ lazy_static::lazy_static! {
             memory::handle_interfaces::driver_handle::DriverProcessHandle::attach(crate::PROCESS_NAME).expect("Failed to create a handle to MW")
         ));
 
-        let game = Game::new(handle).unwrap();
+        let mut game = Game::new(handle).unwrap();
+
+        game.update_addresses();
 
         game
     };
@@ -31,7 +33,7 @@ macro_rules! get_game {
 #[test]
 fn decrypt_client_info() {
     let game = get_game!();
-    let base_address = game.base_address;
+    let base_address = game.addresses.game_base_address;
     let _client_info = encryption::get_client_info_address(base_address).unwrap();
 }
 
@@ -39,7 +41,7 @@ fn decrypt_client_info() {
 fn decrypt_client_base() {
     let game = get_game!();
 
-    let base_address = game.base_address;
+    let base_address = game.addresses.game_base_address;
 
     let client_info = encryption::get_client_info_address(base_address).unwrap();
     let _client_base = encryption::get_client_base_address(base_address, client_info).unwrap();
@@ -49,7 +51,7 @@ fn decrypt_client_base() {
 fn decrypt_bone_base() {
     let game = get_game!();
 
-    let base_address = game.base_address;
+    let base_address = game.addresses.game_base_address;
 
     let _bone_base = encryption::get_bone_base_address(base_address).unwrap();
 }
@@ -90,7 +92,7 @@ fn character_names() {
     trace!("{:?}", game.get_players().unwrap());
     for player in &game.get_players().unwrap() {
         trace!("Found player {:?}", player);
-        if player.name != "" {
+        if !player.name.is_empty() {
             return;
         }
     }
@@ -109,5 +111,5 @@ fn get_bone_pos() {
 fn get_refdef() {
     let game = get_game!();
 
-    encryption::get_refdef_pointer(game.base_address).unwrap();
+    encryption::get_refdef_pointer(game.addresses.game_base_address).unwrap();
 }

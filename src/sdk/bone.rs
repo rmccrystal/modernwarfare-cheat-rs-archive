@@ -2,9 +2,10 @@
 
 use memlib::math::Vector3;
 use memlib::memory::{read_memory, Address};
+use anyhow::*;
 use log::*;
 use super::{offsets};
-use crate::sdk::Game;
+use crate::sdk::{Game, GameAddresses};
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug)]
@@ -66,24 +67,24 @@ pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
 ];
 
 
-pub fn get_bone_position(game: &Game, entity_num: i32, bone_index: u32) -> Result<Vector3, Box<dyn std::error::Error>> {
-    let bone_ptr_index: u16 = read_memory(game.base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
+pub fn get_bone_position(addresses: &GameAddresses, entity_num: i32, bone_index: u32) -> Result<Vector3> {
+    let bone_ptr_index: u16 = read_memory(addresses.game_base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
     trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);
 
-    let bone_base = game.bone_base.ok_or("Could not find bone_base")?;
+    let bone_base = addresses.bone_base.ok_or(anyhow!("Could not find bone_base"))?;
 
     let bone_ptr: Address = read_memory(bone_base + (bone_ptr_index as u64 * offsets::bones::INDEX_STRUCT_SIZE as u64) + 0xC0);
     if bone_ptr == 0 {
-        return Err("Could not find bone_ptr".into());
+        bail!("Could not find bone_ptr");
     }
     trace!("Found bone_ptr: 0x{:X}", bone_ptr);
 
     let mut bone_pos: Vector3 = read_memory(bone_ptr as u64 + (bone_index as u64 * 0x20) + 0x10);
     if bone_pos.is_zero() {
-        return Err("Could not find bone_pos".into());
+        bail!("Could not find bone_pos");
     }
 
-    let client_info = game.client_info_base.ok_or("Could not find client_info_base")?;
+    let client_info = addresses.client_info_base.ok_or(anyhow!("Could not find client_info_base"))?;
     let base_pos: Vector3 = read_memory(client_info + offsets::bones::BASE_POS);
 
     bone_pos = bone_pos + base_pos;

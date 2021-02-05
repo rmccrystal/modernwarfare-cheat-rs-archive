@@ -1,14 +1,16 @@
-use crate::sdk::{Game, Player, units_to_m};
 use std::cmp;
-use crate::sdk::structs::CharacterStance;
-use memlib::overlay::{Overlay, OverlayInterface, Color, TextStyle, Font, BoxOptions, TextOptions, LineOptions, CircleOptions};
-use memlib::math::{Vector3, Vector2};
-use memlib::unwrap_or_return;
-use crate::hacks::aimbot::AimbotContext;
-use crate::sdk::bone::Bone;
 use std::cmp::Ordering;
-use rand::{SeedableRng, RngCore};
+
+use memlib::math::{Vector2, Vector3};
+use memlib::overlay::*;
+use memlib::unwrap_or_return;
+use rand::{RngCore, SeedableRng};
+
 use crate::config::Config;
+use crate::hacks::aimbot::AimbotContext;
+use crate::sdk::{Game, Player, units_to_m, GameInfo};
+use crate::sdk::bone::Bone;
+use crate::sdk::structs::CharacterStance;
 
 #[derive(Copy, Clone, Debug)]
 pub struct EspConfig {
@@ -29,7 +31,7 @@ impl EspConfig {
             box_color: Color::from_hex(0x7d32a8),
             highlighted_box_color: Color::from_hex(0xd32bfc),
             max_distance: 500.0,
-            teams: false,
+            teams: true,
             opacity: 200,
             skeleton: false,
             extra_info_distance: 200.0,
@@ -41,12 +43,8 @@ pub struct EspContext {
     highlighted_player: i32
 }
 
-pub fn esp(game: &Game, overlay: &mut Overlay, config: &Config, aimbot_context: &AimbotContext) {
+pub fn esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &Config, aimbot_context: &AimbotContext) {
     let esp_config = &config.esp_config;
-    let game_info = match game.game_info.as_ref() {
-        Some(info) => info,
-        None => return
-    };
 
     let mut players = game_info.players.clone();
     let local_origin = &game_info.local_position;
@@ -58,7 +56,7 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &Config, aimbot_context: 
     // ;
 
     for player in &players {
-        if player.character_id == game_info.local_player.character_id {
+        if player.id == game_info.local_player.id {
             continue;
         }
         if !esp_config.teams && player.is_teammate(&game_info, &config.friends) {
@@ -68,23 +66,18 @@ pub fn esp(game: &Game, overlay: &mut Overlay, config: &Config, aimbot_context: 
         if distance > 350.0 {
             continue;
         }
-        let highlighted = player.character_id == aimbot_context.aim_lock_player_id.unwrap_or(-1);
-        draw_esp(&game, overlay, &esp_config, player, highlighted);
+        let highlighted = player.id == aimbot_context.aim_lock_player_id.unwrap_or(-1);
+        draw_esp(&game_info, overlay, &esp_config, player, highlighted);
     }
 }
 
-pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, player: &Player, highlighted: bool) {
-    let game_info = match game.game_info.as_ref() {
-        Some(info) => info,
-        None => return
-    };
-
+pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfig, player: &Player, highlighted: bool) {
     let distance = units_to_m((game_info.local_player.origin - player.origin).length());
     if distance > config.max_distance {
         return;
     }
 
-    let bbox = unwrap_or_return!(player.get_bounding_box(&game));
+    let bbox = unwrap_or_return!(player.get_bounding_box(&game_info.game));
 
     let left_x = bbox.0.x;
     let bottom_y = bbox.0.y;
@@ -176,10 +169,10 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
 
     if distance < config.extra_info_distance {
         match player.stance {
-            CharacterStance::STANDING => {},//draw_flag("S", Color::from_hex(0x1fdb1f).opacity(config.opacity)),
-            CharacterStance::CROUCHING => draw_flag("C", Color::from_hex(0x1f9cdb).opacity(config.opacity)),
-            CharacterStance::CRAWLING => draw_flag("P", Color::from_hex(0xdb931f).opacity(config.opacity)),
-            CharacterStance::DOWNED => draw_flag("D", Color::from_hex(0xa83232).opacity(config.opacity))
+            CharacterStance::Standing => {}//draw_flag("S", Color::from_hex(0x1fdb1f).opacity(config.opacity)),
+            CharacterStance::Crouching => draw_flag("C", Color::from_hex(0x1f9cdb).opacity(config.opacity)),
+            CharacterStance::Crawling => draw_flag("P", Color::from_hex(0xdb931f).opacity(config.opacity)),
+            CharacterStance::Downed => draw_flag("D", Color::from_hex(0xa83232).opacity(config.opacity))
         }
         if player.ads {
             draw_flag("ADS", Color::from_hex(0xA75A97).opacity(config.opacity));
@@ -188,11 +181,11 @@ pub fn draw_esp(game: &Game, mut overlay: &mut Overlay, config: &EspConfig, play
     }
 
     if config.skeleton {
-        draw_skeleton(&game, &mut overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
+        draw_skeleton(&game_info.game, overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
     }
 }
 
-pub fn draw_skeleton(game: &Game, overlay: &mut Overlay, player: &Player, color: Color, thickness: f32) {
+pub fn draw_skeleton(game: &Game, overlay: &mut impl Draw, player: &Player, color: Color, thickness: f32) {
     for (bone1, bone2) in crate::sdk::bone::BONE_CONNECTIONS {
         let pos1 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, *bone1).ok())));
         let pos2 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, *bone2).ok())));

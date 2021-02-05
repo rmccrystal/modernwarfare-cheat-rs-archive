@@ -1,10 +1,18 @@
+#![feature(iterator_fold_self)]
+#![feature(in_band_lifetimes)]
+
 use memlib::logger::MinimalLogger;
 use memlib::memory;
-use memlib::system;
 use memlib::overlay;
 
 use log::*;
+use anyhow::*;
 use std::error::Error;
+use memlib::memory::handle_interfaces::driver_handle::DriverProcessHandle;
+use memory::Handle;
+use memlib::overlay::imgui::{Imgui, ImguiConfig};
+use memlib::overlay::window::Window;
+use win_key_codes::VK_INSERT;
 
 mod sdk;
 mod hacks;
@@ -14,35 +22,22 @@ mod gui;
 pub const PROCESS_NAME: &str = "ModernWarfare.exe";
 pub const CHEAT_TICKRATE: u64 = 50;
 
-const LOG_LEVEL: LevelFilter = LevelFilter::Info;
+const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
 
-fn run() -> Result<(), Box<dyn Error>> {
+fn run() -> Result<()> {
     // Initialize the logger
     MinimalLogger::init(LOG_LEVEL)?;
 
     // Create a handle to the game
-    let handle = memory::Handle::from_boxed_interface(
-        Box::new(memory::handle_interfaces::driver_handle::DriverProcessHandle::attach(PROCESS_NAME)?)
-    );
+    let handle = Handle::from_interface(DriverProcessHandle::attach(PROCESS_NAME)?);
 
-    // Init system by connecting to RPC running on guest
-    info!("Connecting to system host");
-    // system::connect(&"192.168.122.129:9800".parse().unwrap()).unwrap();
-    system::init().unwrap();
-
-    // Init the overlay
-    // let overlay = Box::new(overlay::looking_glass::LookingGlassOverlay::new(
-    //     "/tmp/overlay-pipe",
-    //     false,
-    //     6
-    // ).expect("Failed to create overlay"));
-    let overlay = Box::new(overlay::null_overlay::NullOverlay);
+    memlib::system::init().unwrap();
 
     // Create a game struct from the handle
     let game = sdk::Game::new(handle)?;
 
     // Run the hack loop
-    hacks::hack_loop(game, overlay)?;
+    hacks::hack_loop(game)?;
 
     Ok(())
 }

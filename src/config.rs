@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
 use crate::hacks::aimbot::AimbotConfig;
-use memlib::system;
 use crate::hacks::closest_player::ClosestPlayerConfig;
 use crate::hacks::esp::EspConfig;
+use memlib::winutil::is_key_down;
 
 // The config struct passed in the main hack loop
 #[derive(Clone, Debug)]
@@ -43,7 +43,7 @@ impl Keybind {
             Keybind::AlwaysOn => true,
             Keybind::WhilePressed(keys) => {
                 for &key in keys {
-                    if system::get_key_state(key) {
+                    if is_key_down(key) {
                         return true
                     }
                 }
@@ -51,7 +51,7 @@ impl Keybind {
             },
             Keybind::WhileNotPressed(keys) => {
                 for &key in keys {
-                    if system::get_key_state(key) {
+                    if is_key_down(key) {
                         return false
                     }
                 }

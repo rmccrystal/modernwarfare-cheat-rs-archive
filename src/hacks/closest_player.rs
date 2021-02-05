@@ -2,13 +2,14 @@ use crate::sdk::*;
 use crate::sdk::structs::CharacterStance;
 use crate::config::{Keybind, Config};
 use log::*;
-use memlib::overlay::{Overlay, Color, TextStyle, Font, TextOptions};
+use memlib::overlay::{Color, TextStyle, Font, TextOptions, Draw};
 use memlib::math::Vector2;
 
 #[derive(Clone, Debug)]
 pub struct ClosestPlayerConfig {
     pub enabled: bool,
     pub ignore_downed: bool,
+    pub ignore_teammates: bool,
 }
 
 impl ClosestPlayerConfig {
@@ -16,52 +17,47 @@ impl ClosestPlayerConfig {
         Self {
             enabled: true,
             ignore_downed: true,
+            ignore_teammates: true,
         }
     }
 }
 
-pub fn closest_player(game: &Game, global_config: &Config, overlay: &mut Overlay) {
+pub fn closest_player(game_info: &GameInfo, global_config: &Config, overlay: &mut impl Draw) {
     let config = &global_config.cloest_player_config;
     if !config.enabled {
         return;
     }
 
-    let game_info = {
-        if game.game_info.is_none() {
-            return
-        }
-        game.game_info.as_ref().unwrap()
-    };
-
     let players = &game_info.players;
     let local_player = &game_info.local_player;
 
-    let mut closest_player: (Option<Player>, f32) = (None, 9999999999.0);
+    let closest_player = players
+        .iter()
+        .filter(|player| {
+            if player.id == local_player.id {
+                return false;
+            }
+            if config.ignore_teammates && player.is_teammate(&game_info, &global_config.friends) {
+                return false;
+            }
+            if config.ignore_downed && player.stance == CharacterStance::Downed {
+                return false;
+            }
 
-    for player in players {
-        if player.character_id == local_player.character_id {
-            continue;
-        }
-        if player.is_teammate(&game_info, &global_config.friends) {
-            continue;
-        }
-        if config.ignore_downed && player.stance == CharacterStance::DOWNED {
-            continue;
-        }
-
-        let distance = units_to_m((player.origin - local_player.origin).length());
-        if distance < closest_player.1 {
-            closest_player.0 = Some(player.clone());
-            closest_player.1 = distance;
-        }
-    }
+            true
+        })
+        .map(|player| (player, units_to_m((player.origin - local_player.origin).length())))
+        .min_by(|&(_, dist1), &(_, dist2)| {
+            dist1.partial_cmp(&dist2).unwrap()
+        });
 
     // If there aren't any players that fit the criteria, return
-    if closest_player.0.is_none() {
+    if closest_player.is_none() {
         return
     }
+    let closest_player = closest_player.unwrap();
 
-    let player = closest_player.0.unwrap();
+    let player = closest_player.0;
     let distance = closest_player.1;
     let angle = memlib::math::calculate_relative_angles(&local_player.origin, &player.origin, &game_info.local_view_angles);
 

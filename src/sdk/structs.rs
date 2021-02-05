@@ -8,25 +8,25 @@ use memlib::math::{Vector3, Vector2};
 #[repr(i32)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CharacterStance {
-    STANDING = 0,
-    CROUCHING = 1,
-    CRAWLING = 2,
-    DOWNED = 3,
+    Standing = 0,
+    Crouching = 1,
+    Crawling = 2,
+    Downed = 3,
 }
 
 impl ToString for CharacterStance {
     fn to_string(&self) -> String {
         String::from(match self {
-            CharacterStance::STANDING => "Standing",
-            CharacterStance::CROUCHING => "Crouching",
-            CharacterStance::CRAWLING => "Crawling",
-            CharacterStance::DOWNED => "Downed",
+            CharacterStance::Standing => "Standing",
+            CharacterStance::Crouching => "Crouching",
+            CharacterStance::Crawling => "Crawling",
+            CharacterStance::Downed => "Downed",
         })
     }
 }
 
 #[repr(C)]
-pub struct name_t
+pub struct Name
 {
     pub entity_index: u32,
     pub name: [u8; 0x24],
@@ -37,7 +37,7 @@ pub struct name_t
 
 #[repr(C)]
 #[derive(Clone, Debug)]
-pub struct refdef_view {
+pub struct RefdefView {
     pub tan_half_fov: Vector2,
     unk6: [u8; 0xC],
     pub axis: [Vector3; 3],
@@ -45,10 +45,10 @@ pub struct refdef_view {
 
 #[repr(C)]
 #[derive(Clone, Debug)]
-pub struct refdef_t {
+pub struct RefDef {
     pub x: i32,
     pub y: i32,
     pub width: i32,
     pub height: i32,
-    pub view: refdef_view,
+    pub view: RefdefView,
 }

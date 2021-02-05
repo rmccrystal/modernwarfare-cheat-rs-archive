@@ -1,7 +1,6 @@
 use crate::sdk::*;
 use log::*;
-use memlib::system;
-use memlib::math;
+use memlib::{math, system};
 use crate::config::{Keybind, Config};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
@@ -53,7 +52,7 @@ impl AimbotContext {
     }
 }
 
-pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
+pub fn aimbot(game_info: &GameInfo, global_config: &Config, ctx: &mut AimbotContext) {
     let config = &global_config.aimbot_config;
 
     if !config.enabled {
@@ -65,22 +64,14 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         return;
     }
 
-    let game_info = {
-        if game.game_info.is_none() {
-            debug!("Not in game");
-            return;
-        }
-        game.game_info.as_ref().unwrap()
-    };
-
     let get_head_pos = |player: &Player| {
-        player.get_head_position(&game)
+        player.get_head_position(&game_info.game)
     };
 
     // Get target
     let target = {
         if let Some(id) = ctx.aim_lock_player_id {
-            match game.get_player_by_id(id) {
+            match game_info.get_player_by_id(id) {
                 Some(pl) => Some(pl),
                 None => get_target(&game_info, &config, get_head_pos, &global_config.friends)
             }
@@ -95,69 +86,64 @@ pub fn aimbot(game: &Game, global_config: &Config, ctx: &mut AimbotContext) {
         return;
     }
     let target = target.unwrap();
-    if target.stance == CharacterStance::DOWNED {
+    if target.stance == CharacterStance::Downed {
         ctx.aim_lock_player_id = None;
     }
 
-    ctx.aim_lock_player_id = Some(target.character_id);
+    ctx.aim_lock_player_id = Some(target.id);
 
     // Aim at target
     let _ = aim_at(&game_info, &target, &config, get_head_pos);
 }
 
 /// Returns the target to aim at or None otherwise
-fn get_target(game_info: &GameInfo, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &[String]) -> Option<Player> {
+fn get_target<'a, 'g>(game_info: &'a GameInfo, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &[String]) -> Option<&'a Player> {
     let local_player = &game_info.local_player;
     let mut player_list = game_info.players.clone();
 
     // Remove local_player
-    player_list.retain(|player| player.character_id != local_player.character_id);
+    player_list.retain(|player| player.id != local_player.id);
 
     let local_view_angles = &game_info.local_view_angles;
     let local_position = &game_info.local_position;
 
-    // Get the best player by FOV
-    let mut target = None;
-    let mut best_score = 9999999.0;
+    game_info.players.iter()
+        .filter(|&player| {
+            let position = get_aim_position(&player);
 
-    for player in player_list {
-        if !config.teams && player.is_teammate(&game_info, friends) {
-            continue;
-        }
+            if player.id == game_info.local_player.id {
+                return false;
+            }
 
-        // let position = player.get_bone_position(&game, config.bone);
-        // if position.is_err() {
-        //     error!("Failed to get bone position for {}: {}", player.name, position.err().unwrap());
-        //     return None;
-        // }
-        // let position = position.unwrap();
-        let position = get_aim_position(&player);
+            // Filter out teammates
+            if !config.teams && player.is_teammate(&game_info, friends) {
+                return false;
+            }
 
-        let distance = (position - local_position).length();
+            // Filter out players too far away
+            let distance = (position - local_position).length();
 
-        if units_to_m(distance) > config.distance_limit {
-            continue;
-        }
+            if units_to_m(distance) > config.distance_limit {
+                return false;
+            }
 
-        if !config.aim_at_downed && player.stance == CharacterStance::DOWNED {
-            continue;
-        }
+            // Ignore downed
+            if !config.aim_at_downed && player.stance == CharacterStance::Downed {
+                return false;
+            }
 
-        let angle = math::calculate_relative_angles(&local_position, &position, &local_view_angles);
-        let distance = (local_position - position).length();
-        let fov = angle.length();
+            true
+        })
+        .min_by_key(|&player| {
+            let position = get_aim_position(&player);
 
-        // Combine fov and distance
-        let score = fov + (distance / 100.0) * fov;
+            let angle = math::calculate_relative_angles(&local_position, &position, &local_view_angles);
+            let distance = (local_position - position).length();
+            let fov = angle.length();
 
-        // Update best_fov if necessary
-        if fov < config.fov && score < best_score {
-            best_score = score;
-            target = Some(player);
-        }
-    }
-
-    target
+            // Combine fov and distance
+            (fov + (distance / 100.0) * fov) as i32
+        })
 }
 
 fn aim_at(game_info: &GameInfo, target: &Player, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3) {

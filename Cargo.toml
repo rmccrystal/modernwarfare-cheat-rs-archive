@@ -13,6 +13,7 @@ log = "*"
 lazy_static = "*"
 cxx = "0.4.2"
 rand = { version = "0.7.3", features = ["small_rng"] }
+anyhow = "1.0.38"
 
 [build-dependencies]
 cxx-build = "0.4.2"

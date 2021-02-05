@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-use super::structs::{name_t};
+use anyhow::*;
+use super::structs::{Name};
 use super::offsets::character_info;
 use memlib::math::{Vector3, Vector2};
 use memlib::memory::{read_memory, Address, dump_memory, try_read_memory};
@@ -15,7 +16,7 @@ pub struct Player {
     pub name: String,
     pub origin: Vector3,
     pub team: i32,
-    pub character_id: i32,
+    pub id: i32,
     pub stance: CharacterStance,
     pub health: i32,
     pub ads: bool,
@@ -23,22 +24,29 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(game: &Game, base_address: Address) -> Option<Self> {
-        let valid: i32 = try_read_memory(base_address + character_info::VALID).ok()?;
-        if valid != 1 {
-            trace!("Invalidated player because valid was {}", valid);
-            return None;
+    pub fn new(game: &Game, base_address: Address, index: i32) -> Result<Self> {
+        // let valid: i32 = try_read_memory(base_address + character_info::VALID).ok()?;
+        // if valid != 1 {
+        //     trace!("Invalidated player because valid was {}", valid);
+        //     return None;
+        // }
+
+        let position_address: Address = try_read_memory(base_address + character_info::POS_PTR)?;
+        if position_address == 0 {
+            bail!("Position address was 0");
         }
 
-        let position_address: Address = read_memory(base_address + character_info::POS_PTR);
-        if position_address > 0xFFFFFFFFFFFFFFF {
-            trace!("Invalidated player because position_address was 0x{:X}", position_address);
-            return None;
+        if position_address >= 0xFFFFFFFFFFFFFFF {
+            bail!("Position address was too high");
         }
-        let origin: Vector3 = read_memory(position_address + 0x40);
+        let origin: Vector3 = try_read_memory(position_address + 0x40).context("Could not read position")?;
         if origin.is_zero() {
-            trace!("Invalidated player because origin was {:?}", origin);
-            return None;
+            bail!("Origin was {:?}", origin);
+        }
+
+        let dead: i32 = read_memory(base_address + character_info::DEATH);
+        if dead != 0 {
+            bail!("Dead was {}", dead);
         }
 
         // let death: i32 = read_memory(position_address + 0xCF8);
@@ -47,28 +55,29 @@ impl Player {
         // }
 
         let stance: CharacterStance = read_memory(base_address + character_info::STANCE);
-        let entity_num: i32 = read_memory(base_address + character_info::ENTITY_NUM);
+        // let stance = CharacterStance::Standing;
+        // let entity_num: i32 = read_memory(base_address + character_info::ENTITY_NUM);
         let team: i32 = read_memory(base_address + character_info::TEAM);
-        let ads: i32 = read_memory(base_address + character_info::ADS);
-        let reloading: bool = read_memory(base_address + character_info::RELOAD);
+        // let ads: i32 = read_memory(base_address + character_info::ADS);
+        // let reloading: bool = read_memory(base_address + character_info::RELOAD);
 
-        let name_struct = game.get_name_struct(entity_num as u32);
+        let name_struct = game.get_name_struct(index as u32);
         if name_struct.health <= 0 {
-            trace!("Invalidated player because health was {}", name_struct.health);
-            return None;
+            bail!("Invalidated player because health was {}", name_struct.health);
         }
 
-        trace!("Creating new player with character_id {}", entity_num);
+        trace!("Creating new player with character_id {}", index);
 
-        Some(Self {
+        Ok(Self {
             origin,
-            character_id: entity_num,
+            id: index,
             team,
             name: name_struct.get_name(),
             stance,
             // ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
-            ads: ads == 1,
+            // ads: ads == 1,
+            ads: false,
             health: name_struct.health,
             base_address,
         })
@@ -84,18 +93,18 @@ impl Player {
         game_info.local_player.team == self.team
     }
 
-    pub fn get_bone_position(&self, game: &Game, bone: Bone) -> Result<Vector3, Box<dyn std::error::Error>> {
-        let pos = bone::get_bone_position(&game, self.character_id, unsafe { std::mem::transmute(bone) })?;
+    pub fn get_bone_position(&self, game: &Game, bone: Bone) -> Result<Vector3> {
+        let pos = bone::get_bone_position(&game.addresses, self.id, unsafe { std::mem::transmute(bone) })?;
         let distance_from_origin = crate::sdk::units_to_m((pos - self.origin).length());
         if distance_from_origin > 2.0 {
             warn!("bone {:?} ({}) {}m away from {}'s origin was read ({:?})", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name, pos);
-            return Err("Bone was too far away from player body".into());
+            bail!("Bone was too far away from player body");
         }
         Ok(pos)
     }
 
     pub fn get_head_position(&self, game: &Game) -> Vector3 {
-        match self.get_bone_position(&game, Bone::Head) {
+        match self.get_bone_position(game, Bone::Head) {
             Ok(pos) => pos,
             Err(err) => {
                 // warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
@@ -138,10 +147,10 @@ impl Player {
 
         let height = feet_pos.y - head_pos.y;
         let width = match self.stance {
-            CharacterStance::STANDING => height / 4.0,
-            CharacterStance::CROUCHING => height / 2.5,
-            CharacterStance::DOWNED => height * 2.0,
-            CharacterStance::CRAWLING => height * 2.5,
+            CharacterStance::Standing => height / 4.0,
+            CharacterStance::Crouching => height / 2.5,
+            CharacterStance::Downed => height * 2.0,
+            CharacterStance::Crawling => height * 2.5,
         };
 
         let size = 1.0;
@@ -159,16 +168,16 @@ impl Player {
 
     pub fn assume_head_position(&self) -> Vector3 {
         let delta_z = match self.stance {
-            CharacterStance::STANDING => 60.0,
-            CharacterStance::CROUCHING => 40.0,
-            CharacterStance::CRAWLING => 10.0,
-            CharacterStance::DOWNED => 20.0,
+            CharacterStance::Standing => 60.0,
+            CharacterStance::Crouching => 40.0,
+            CharacterStance::Crawling => 10.0,
+            CharacterStance::Downed => 20.0,
         };
         self.origin + Vector3 { x: 0.0, y: 0.0, z: delta_z }
     }
 }
 
-impl name_t {
+impl Name {
     pub fn get_name(&self) -> String {
         String::from_utf8(self.name.to_vec())
             .unwrap_or("".to_string())

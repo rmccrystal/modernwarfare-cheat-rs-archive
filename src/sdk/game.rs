@@ -1,37 +1,42 @@
 #![allow(dead_code)]
 
 use memlib::memory::*;
+use anyhow::*;
 use log::*;
 use super::encryption;
 use super::structs;
 use super::offsets;
 use super::player::Player;
 use memlib::math::{Angles2, Vector3, Vector2};
-use crate::sdk::structs::{refdef_t};
+use crate::sdk::structs::{RefDef};
 use crate::sdk::world_to_screen::world_to_screen;
 use std::time::{Duration, Instant};
+use std::ops::Sub;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// Contains information about a game. Only exists when in a game
+/// The single tick state of the cheat
 #[derive(Clone, Debug)]
-pub struct GameInfo {
+pub struct GameInfo<'a> {
     pub players: Vec<Player>,
     pub local_position: Vector3,
     pub local_view_angles: Angles2,
     pub local_player: Player,
+    pub game: &'a Game,
+}
+
+impl GameInfo<'_> {
+    pub fn get_player_by_id(&self, id: i32) -> Option<&Player> {
+        self.players.iter().find(|&p| p.id == id)
+    }
 }
 
 /// A struct containing information and methods for the game.
 /// This struct will be passed into the main hack loop and used accordingly.
 #[derive(Clone, Debug)]
 pub struct Game {
-    pub base_address: Address,
-    pub game_info: Option<GameInfo>,
-    pub client_info_base: Option<Address>,
-    pub character_array_base: Option<Address>,
-    pub bone_base: Option<Address>,
-    pub refdef: Option<Pointer<refdef_t>>,
+    pub addresses: GameAddresses,
     address_update_frequency: Duration,
-    last_update: Instant
+    last_update: Instant,
 }
 
 impl Game {
@@ -42,62 +47,45 @@ impl Game {
 
         // Get the base address or return an error
         let base_address = get_module(crate::PROCESS_NAME)
-            .ok_or_else(|| format!("Error getting module {}", crate::PROCESS_NAME))?
+            .ok_or_else(|| anyhow!("Error getting module {}", crate::PROCESS_NAME))?
             .base_address;
 
         let mut game = Self {
-            base_address,
-            client_info_base: None,
-            character_array_base: None,
-            bone_base: None,
-            game_info: None,
-            refdef: None,
+            addresses: GameAddresses::new(base_address),
             address_update_frequency: Duration::from_secs(1),
-            last_update: Instant::now() - Duration::from_secs(1000),
+            last_update: Instant::now().sub(Duration::from_secs(10)),
         };
-
-        game.update();
-        game.update_addresses();
-
-        info!("Game initialized");
 
         Ok(game)
     }
 
     /// This function updates the game data. Should be ran every game tick
-    pub fn update(&mut self) {
-        if self.last_update + self.address_update_frequency < Instant::now() {
-            self.update_addresses();
-            self.last_update = Instant::now();
-            self.refdef = encryption::get_refdef_pointer(self.base_address).ok()
-        }
-
-        self.game_info = self.get_game_info();
-    }
-
     pub fn update_addresses(&mut self) {
-        self.bone_base = self.get_bone_base();
-        self.character_array_base = self.get_character_array_base();
-        self.client_info_base = self.get_client_info_base();
+        if self.last_update + self.address_update_frequency < Instant::now() {
+            self.addresses.update();
+            self.last_update = Instant::now();
+        }
     }
 
-    pub fn get_game_info(&self) -> Option<GameInfo> {
-        Some(GameInfo {
-            local_view_angles: self.get_camera_angles()?,
-            local_position: self.get_camera_position()?,
-            local_player: self.get_local_player()?,
-            players: self.get_players()?,
+    pub fn get_game_info(&self) -> Result<GameInfo> {
+        Ok(GameInfo {
+            local_view_angles: self.get_camera_angles().ok_or_else(|| anyhow!("Could not get local view angles"))?,
+            local_position: self.get_camera_position().ok_or_else(|| anyhow!("Could not get camera pos"))?,
+            local_player: self.get_local_player().ok_or_else(|| anyhow!("Could not get local player"))?,
+            players: self.get_players().ok_or_else(|| anyhow!("Could not get players"))?,
+            game: &self,
         })
     }
+
 
     pub fn get_players(&self) -> Option<Vec<Player>> {
         if !self.in_game() {
             return None;
         }
-        let char_array = self.character_array_base?;
+        let char_array = self.addresses.character_array_base?;
 
         // Read the character array
-        let mut player_addresses: Vec<Address> = {
+        let player_addresses: Vec<Address> = {
             let mut addresses = Vec::new();
             for i in 0..155 {
                 addresses.push(char_array + (i * offsets::character_info::SIZE) as Address)
@@ -105,10 +93,16 @@ impl Game {
             addresses
         };
 
-        let players = player_addresses.
+        let players: Vec<_> = player_addresses.
             iter()
-            .map(|&addr| Player::new(&self, addr))
-            .filter(|player| player.is_some())
+            .enumerate()
+            .map(|(idx, &addr)| Player::new(&self, addr, idx as i32)
+                .map_err(|e| {
+                    trace!("Invalidated player: {}", e);
+                    e
+                })
+            )
+            .filter(|player| player.is_ok())
             .map(|player| player.unwrap())
             .collect();
 
@@ -116,12 +110,12 @@ impl Game {
     }
 
     pub fn get_player_by_id(&self, id: i32) -> Option<Player> {
-        let player_base = self.character_array_base? + (id as u64 * offsets::character_info::SIZE as u64);
-        Player::new(&self, player_base)
+        let player_base = self.addresses.character_array_base? + (id as u64 * offsets::character_info::SIZE as u64);
+        Player::new(&self, player_base, id).ok()
     }
 
     pub fn world_to_screen(&self, world_pos: &Vector3) -> Option<Vector2> {
-        let refdef = encryption::get_refdef_pointer(self.base_address).ok()?.read();
+        let refdef = encryption::get_refdef_pointer(self.addresses.game_base_address).ok()?.read();
         world_to_screen(
             &world_pos,
             self.get_camera_position()?,
@@ -135,8 +129,8 @@ impl Game {
 
 // Internal functions
 impl Game {
-    pub fn get_camera_position(&self) -> Option<Vector3> {
-        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
+    pub(crate) fn get_camera_position(&self) -> Option<Vector3> {
+        let camera_addr: Address = read_memory(self.addresses.game_base_address + offsets::CAMERA_POINTER);
         let pos: Vector3 = read_memory(camera_addr + offsets::CAMERA_OFFSET);
         if pos.is_zero() {
             return None;
@@ -144,19 +138,19 @@ impl Game {
         Some(pos)
     }
 
-    pub fn get_camera_angles(&self) -> Option<Angles2> {
-        let camera_addr: Address = read_memory(self.base_address + offsets::CAMERA_POINTER);
-        let angles: Angles2 = read_memory(camera_addr + offsets::CAMERA_OFFSET + 12);
+    pub(crate) fn get_camera_angles(&self) -> Option<Angles2> {
+        let camera_addr: Address = try_read_memory(self.addresses.game_base_address + offsets::CAMERA_POINTER).ok()?;
+        let angles: Angles2 = try_read_memory(camera_addr + offsets::CAMERA_OFFSET + 12).ok()?;
         if angles.is_zero() {
             return None;
         }
         Some(angles)
     }
 
-    pub fn get_local_player(&self) -> Option<Player> {
-        // return self.get_local_player_fallback();
+    pub(crate) fn get_local_player(&self) -> Option<Player> {
+        return self.get_local_player_fallback();
         let local_index = self.get_local_index()?;
-        trace!("Local index: {}", local_index);
+        debug!("Local index: {}", local_index);
         self.get_player_by_id(local_index)
     }
 
@@ -186,13 +180,13 @@ impl Game {
         Some(closest_player.0.clone())
     }
 
-    pub fn in_game(&self) -> bool {
+    fn in_game(&self) -> bool {
         return true;
         // read_memory::<i32>(self.base_address + offsets::GAMEMODE) > 1
     }
 
-    pub fn get_name_struct(&self, character_id: u32) -> structs::name_t {
-        let name_array_base: Address = read_memory(self.base_address + offsets::NAME_ARRAY);
+    pub(crate) fn get_name_struct(&self, character_id: u32) -> structs::Name {
+        let name_array_base: Address = read_memory(self.addresses.game_base_address + offsets::NAME_ARRAY);
 
         let character_id = character_id as u64;
         // let base = name_array_base + offsets::NAME_LIST_OFFSET + ((character_id + character_id * 8) << 4);
@@ -200,33 +194,64 @@ impl Game {
         read_memory(base)
     }
 
-    pub fn get_local_index(&self) -> Option<i32> {
-        let ptr: Address = read_memory(self.client_info_base? + offsets::LOCAL_INDEX_POINTER);
-        Some(read_memory(ptr + offsets::LOCAL_INDEX_OFFSET))
+    fn get_local_index(&self) -> Option<i32> {
+        let ptr: Address = try_read_memory(self.addresses.client_info_base? + offsets::LOCAL_INDEX_POINTER).ok()?;
+        try_read_memory(ptr + offsets::LOCAL_INDEX_OFFSET).ok()
     }
 }
 
-// Addresses
-impl Game {
-    pub fn get_client_info_base(&self) -> Option<Address> {
-        let client_info = encryption::get_client_info_address(self.base_address);
+#[derive(Clone, Debug, Default)]
+pub struct GameAddresses {
+    pub client_info_base: Option<Address>,
+    pub character_array_base: Option<Address>,
+    pub bone_base: Option<Address>,
+    pub refdef: Option<Pointer<RefDef>>,
+    pub game_base_address: Address,
+}
+
+impl GameAddresses {
+    pub fn new(game_base_address: Address) -> Self {
+        Self {
+            game_base_address,
+            ..Default::default()
+        }
+    }
+
+    pub fn update(&mut self) {
+        self.bone_base = self.get_bone_base();
+        self.refdef = self.get_refdef();
+
+        self.client_info_base = self.get_client_info_base();
+
+        self.character_array_base = match self.client_info_base {
+            Some(base) => self.get_character_array_base(base),
+            None => None
+        }
+    }
+
+    fn get_refdef(&self) -> Option<Pointer<RefDef>> {
+        encryption::get_refdef_pointer(self.game_base_address).ok()
+    }
+
+    fn get_client_info_base(&self) -> Option<Address> {
+        let client_info = encryption::get_client_info_address(self.game_base_address);
         if let Err(error) = &client_info {
             warn!("Failed to find client_info address with error: {}", error)
         }
         client_info.ok()
     }
 
-    pub fn get_character_array_base(&self) -> Option<Address> {
-        let client_info = self.client_info_base?;
-        let client_base = encryption::get_client_base_address(self.base_address, client_info);
+    fn get_character_array_base(&self, client_info_base: Address) -> Option<Address> {
+        let client_base = encryption::get_client_base_address(self.game_base_address, client_info_base);
         if let Err(error) = &client_base {
             warn!("Failed to find client_base address with error: {}", error);
         }
         client_base.ok()
     }
 
-    pub fn get_bone_base(&self) -> Option<Address> {
-        let bone_base = encryption::get_bone_base_address(self.base_address);
+    fn get_bone_base(&self) -> Option<Address> {
+        return None;
+        let bone_base = encryption::get_bone_base_address(self.game_base_address);
         if let Err(error) = &bone_base {
             warn!("Failed to find bone_base address with error: {}", error)
         }
