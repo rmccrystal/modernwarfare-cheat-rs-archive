@@ -5,437 +5,59 @@ extern auto read_qword(uint64_t address) -> uint64_t;
 
 auto decrypt_client_info(uint64_t encrypted_address, uint64_t game_base_address, uint64_t last_key,
                          uint64_t peb) -> uint64_t {
-    uint64_t rax, rbx, rcx, rdx, r8, rdi, r9, r10, r11, r12, r13, r14 = 0;
-    rbx = encrypted_address;
+    auto var_3 = (encrypted_address) * (0x157d6db5fbec5a99);
+    auto var_4 = var_3;
+    auto var_5 = (var_4) >> 0xa;
+    auto var_6 = (var_3) ^(var_5);
+    auto var_7 = var_6;
+    auto var_8 = (var_7) >> 0x14;
+    auto var_9 = (var_6) ^(var_8);
+    auto var_10 = var_9;
+    auto var_11 = (var_10) >> 0x28;
+    auto var_12 = (var_11) ^(var_9);
+    auto var_13 = (var_12) - (peb);
+    auto var_14 = (var_13) >> 0x27;
+    auto var_15 = (var_14) ^((var_12) - (peb));
+    auto var_16 = last_key;
+    auto var_17 = (var_16) * (var_15);
+    auto var_18 = (var_17) * (0x981c17f8a6efa8eb);
+    return var_18;
 
-    rcx = (game_base_address + 0xDAE);
-    //rax -= rcx;
-    rcx = 0xCAE24248DB9B9E3D;
-//    rax &= 0xffffffffc0000000;
-//    rax <<= 0x10;
-//    rax ^= RVPM<UINT64>(processBaseAddress + 0x5B430EA);
-//    rax = (~rax);
-//    rbx *= RVPM<UINT64>(rax + 0xd);
-    rbx *= last_key;
-    rax = rbx;
-    rax >>= 0x21;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x7;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0xE;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x1C;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x38;
-    rbx ^= rax;
-    rax = 0x6E0942B8DC6C7F2A;
-    rbx *= rcx;
-    rbx += rax;
-    rax = rbx;
-    rax >>= 0x2;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x4;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x8;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x10;
-    rbx ^= rax;
-    rax = rbx;
-    rax >>= 0x20;
-    rbx ^= rax;
-
-    return rbx;
 }
+
+typedef uint64_t UINT64;
 
 auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address, uint64_t last_key,
                          uint64_t peb) -> uint64_t {
-    QWORD rax, rbx, rcx, rdx, rdi, r8, r9, r10, r11, r12, r13, r14 = 0;
+    uint64_t rax, rbx, rcx, rdx, r8, rdi, rsi, r9, r10, r11, r12, r13, r14 = 0;
 
-    rbx = peb; // OR ~peb?
-    rax = encrypted_address;
-
-    const auto g_decryptCase = _byteswap_uint64(peb << 0x24) & 0xf;
-
-    switch (g_decryptCase) {
-        case 0: {
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            rcx = rax;
-            rcx >>= 0x23;
-            rax ^= rcx;
-            rcx = rbx;
-            rcx = (~rcx);
-            rcx -= rdi;
-            rdx = rcx + 0xffffffffba07610c;
-            rcx += 0xFFFFFFFFD979F6D5;
-            rdx ^= rcx;
-            rax ^= rdx;
-            rcx = 0xCC0B2FC1F232E415;
-            rax *= rcx;
-            rcx = 0x673439B330235FEC;
-            rax ^= rcx;
-            rcx = 0x6B7C61D6B947965E;
-            rax += rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r10;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-            rax ^= rbx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 1: {
-            rdi = game_base_address;
-            //nop
-            r9 = read_qword(game_base_address + 0x5B4311C);
-            rax ^= rdi;
-            rcx = 0xA19EE1C1C83655FB;
-            rax *= rcx;
-            rcx = 0xC3A073EF2DF80321;
-            rax *= rcx;
-            //nop
-            //nop
+    if (encrypted_address)
+    {
+        UINT64 r11 = peb;
+        UINT64 rax = encrypted_address;
+        UINT64 clientBaseSwitch = _rotr64(peb, 0xF) & 0xF;
+        switch (clientBaseSwitch)
+        {
+        case 0:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r9 = read_qword(game_base_address + 0x5C71122);
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r9;
             rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-            rax ^= rbx;
-            rcx = 0x3F975DD3813B0D89;
-            rax += rcx;
+            rax *= read_qword(rcx + 0x9);
             rcx = rax;
-            rcx >>= 0x9;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x12;
+            rcx >>= 0x21;
             rax ^= rcx;
             rcx = rax;
             rcx >>= 0x24;
             rax ^= rcx;
-            rax -= rdi;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 2: {
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            rdx = rbx;
-            rdx = (~rdx);
-            rcx = (game_base_address + 0x1B3162AB);
-            rcx = (~rcx);
-            rax += rcx;
-            rax += rdx;
-            rax -= rdi;
-            rax += 0xFFFFFFFFA26593A7;
-            rax += rbx;
-            rcx = 0x4C5F6255CE87BC60;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x1A;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x34;
-            rax ^= rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r10;
-            rcx = _byteswap_uint64(rcx);
-            rcx = read_qword(rcx + 0xd);
-            rax *= rcx;
-            rcx = 0xEBF2F7F98A2ACD69;
-            rax ^= rcx;
-            rcx = 0x4991E273E0129B3B;
-            rax *= rcx;
-            rcx = rax;
-            rcx >>= 0x1B;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x36;
-            rax ^= rcx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 3: {
-            rdi = game_base_address;
-            //nop
-            r11 = (game_base_address + 0x3A54E233);
-            r9 = read_qword(game_base_address + 0x5B4311C);
-            rcx = rdi + 0x389b6554;
-            rcx += rbx;
-            rax ^= rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r9;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-            rcx = rbx;
-            rcx *= r11;
-            rax += rcx;
-            rcx = rbx;
-            rcx = (~rcx);
-            rcx ^= read_qword(game_base_address + 0x178175D);
+            rcx = 0x38F6B6276DCF7425;
             rax -= rcx;
-            rcx = rax;
-            rcx >>= 0x16;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x2C;
-            rax ^= rcx;
-            rcx = 0x7FB262CD15417417;
-            rax *= rcx;
-            rcx = 0x617DF683E6D98F69;
-            rax += rcx;
-            rcx = rax;
-            rcx >>= 0xB;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x16;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x2C;
-            rax ^= rcx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 4: {
-            rdi = game_base_address;
-            //nop
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rax ^= rdi;
-            rcx = rax;
-            rcx >>= 0x23;
-            rax ^= rcx;
-            rcx = rbx;
-            rcx ^= read_qword(game_base_address + 0x1781A7F);
-            rax -= rcx;
-            rcx = 0xB240E0666218BBF6;
-            rax ^= rcx;
-            rcx = (game_base_address + 0x31CE17EA);
-            rcx = (~rcx);
-            rcx += rbx;
-            rax ^= rcx;
-            rcx = 0x7F554C7195F237B7;
-            rax *= rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r10;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-
-            return rax;
-
-            break;
-
-        }
-
-        case 5: {
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            //nop
-            rdx = (game_base_address + 0x9B4E);
-            rcx = rax;
-            rcx >>= 0x28;
-            rax ^= rcx;
-            rcx = 0xA5F2421AAD0E251;
-            rax *= rcx;
-            rcx = 0x7874B358DFAA4832;
-            rax += rcx;
-            rcx = 0x79ED618DDDD08F2F;
-            rax += rcx;
-            rcx = rbx;
-            rcx = (~rcx);
-            rcx += rdx;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x12;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x24;
-            rax ^= rcx;
-            //rdx = read_qword(rbp + 0xe8);
-            rcx = rbx;
-            //rdx -= rsi;
-            rcx = (~rcx);
-            rdx = 0;
-            rcx ^= rax;
-            rdx <<= 0x10;
-            rdx ^= r10;
-            rdx = _byteswap_uint64(rdx);
-            rax = read_qword(rdx + 0xd);
-            rax *= rcx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 6: {
-            r9 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            rcx = (game_base_address + 0xCACD);
-            rcx = (~rcx);
-            rcx *= rbx;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x8;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x10;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x20;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x15;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x2A;
-            rax ^= rcx;
-            rcx = 0xF8A0C0CE66D9CE59;
-            rax -= rdi;
-            rax *= rcx;
-            rcx = 0x3304E81FB2A659CE;
-            rax += rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r9;
-            rcx = _byteswap_uint64(rcx);
-            rcx = read_qword(rcx + 0xd);
-            rax *= rcx;
-            rcx = 0xFA53D6B40F712986;
-            rax ^= rcx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 7: {
-            r9 = read_qword(game_base_address + 0x5B4311C);
-            //nop
-            rcx = rax;
-            rcx >>= 0x25;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x1B;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x36;
-            rax ^= rcx;
-            rcx = 0x7DC722B365226A2C;
-            rax ^= rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r9;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-            rcx = rax;
-            rcx >>= 0x25;
-            rax ^= rcx;
-            rcx = 0x3B4B1A242FE71717;
-            rax *= rcx;
-            rcx = rax;
-            rcx >>= 0x19;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x32;
-            rax ^= rcx;
-            rcx = 0xC8C297441A47011D;
-            rax ^= rcx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 8: {
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            rdx = (game_base_address + 0x5DB4A9AF);
-            rcx = rbx;
-            rcx ^= rdx;
-            rax += rcx;
-            rcx = rax;
-            rcx >>= 0x17;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x2E;
-            rax ^= rcx;
-            rax += rdi;
-            rax += rbx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r10;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-            rdx = rbx;
-            rdx = (~rdx);
-            rcx = (game_base_address + 0x4E84AAE1);
-            rcx = (~rcx);
-            rdx *= rcx;
-            rcx = rax;
-            rax = 0x296F71B4532510C1;
-            rax *= rcx;
-            rax += rdx;
-            rax -= rdi;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 9: {
-            rdi = game_base_address;
-            //nop
-            r9 = read_qword(game_base_address + 0x5B4311C);
-            rcx = rax;
-            rcx >>= 0x22;
-            rax ^= rcx;
             rcx = rax;
             rcx >>= 0x4;
             rax ^= rcx;
@@ -449,20 +71,10 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx >>= 0x20;
             rax ^= rcx;
             rax ^= rbx;
-            rcx = 0xD47081853C209C9;
-            rax -= rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r9;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
-            rcx = 0x4B5E7DF7E48CB0FF;
+            rcx = 0xC01877C687D2B5F4;
+            rax ^= rcx;
+            rcx = 0xEF195D44C097B245;
             rax *= rcx;
-            rcx = 0xE8485558E64A1835;
-            rax += rcx;
-            rax += rdi;
 
             return rax;
 
@@ -470,24 +82,308 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         }
 
-        case 10: {
-            rdi = game_base_address;
-            //nop
-            rdx = read_qword(game_base_address + 0x5B4311C);
+        case 1:
+        {
+            rdi = (game_base_address + 0xA7F);
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rax += r11;
+            rcx = (game_base_address + 0x8E69);
+            rcx = (~rcx);
+            rcx *= r11;
+            rax += rcx;
             rcx = rax;
-            rcx >>= 0x1B;
+            rcx >>= 0x18;
             rax ^= rcx;
             rcx = rax;
-            rcx >>= 0x36;
+            rcx >>= 0x30;
             rax ^= rcx;
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
+            rcx = 0;
+            rcx <<= 0x10;
+            rcx ^= r10;
+            rcx = _byteswap_uint64(rcx);
+            rax *= read_qword(rcx + 0x9);
+            rax -= r11;
+            rcx = 0x77194237C7785C87;
+            rax *= rcx;
+            rcx = 0x13E307DB62628C8B;
+            rax *= rcx;
+            rcx = 0x1AF04960AB17733F;
+            rax -= rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 2:
+        {
+            r9 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
+            rcx = 0;
+            rcx <<= 0x10;
+            rcx ^= r9;
+            rcx = _byteswap_uint64(rcx);
+            rax *= read_qword(rcx + 0x9);
+            rax += r11;
+            rcx = r11;
+            rcx = (~rcx);
+            rcx ^= read_qword(game_base_address + 0x17BC8E0);
+            rax += rcx;
+            rcx = 0xAD2855D5D9050BDF;
+            rax *= rcx;
+            rax -= rbx;
+            rcx = rax;
+            rcx >>= 0xC;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x18;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x30;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0xA;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x14;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x28;
+            rax ^= rcx;
+            rcx = 0x463FC32646AB8483;
+            rax *= rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 3:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r9 = read_qword(game_base_address + 0x5C71122);
+            rax += rbx;
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
+            rcx = 0;
+            rcx <<= 0x10;
+            rcx ^= r9;
+            rcx = _byteswap_uint64(rcx);
+            rax *= read_qword(rcx + 0x9);
+            rcx = 0xEE4C9AC74466C667;
+            rax *= rcx;
+            rax -= r11;
+            rcx = rax;
+            rcx >>= 0x19;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x32;
+            rax ^= rcx;
+            rcx = 0x1BAB185822D798F4;
+            rax ^= rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 4:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r9 = read_qword(game_base_address + 0x5C71122);
+            rcx = 0x60E5FF2A3029BB8B;
+            rax *= rcx;
+            rcx = 0xA8D76FE9246D0DC;
+            rax -= rcx;
             rcx = rax;
             rcx >>= 0x11;
             rax ^= rcx;
             rcx = rax;
             rcx >>= 0x22;
             rax ^= rcx;
-            rcx = 0x1D00277E9810B328;
+            rcx = r11 + rbx * 1;
+            rax -= rcx;
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
+            rcx = 0;
+            rcx <<= 0x10;
+            rcx ^= r9;
+            rcx = _byteswap_uint64(rcx);
+            rcx = read_qword(rcx + 0x9);
+            rax *= rcx;
+            rax -= rbx;
+            rax += rbx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 5:
+        {
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            rcx = 0x713A7849491A1B3F;
+            rax *= rcx;
+            rax ^= rbx;
+            rcx = rax;
+            rcx >>= 0x26;
             rax ^= rcx;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            //rdx -= rdi;
+            rdx = 0;
+            rdx <<= 0x10;
+            rdx ^= r10;
+            rcx = 0xFFC7E09B778FFCB2;
+            rcx += rax;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
+            rax *= rcx;
+            rcx = 0xE87E7E1837DCC63;
+            rax += rcx;
+            rax ^= rbx;
+            rax += rbx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 6:
+        {
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            rcx = rax;
+            rcx >>= 0x23;
+            rax ^= rcx;
+            rcx = 0x8248677CDD7B66F;
+            rax *= rcx;
+            rax ^= rbx;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            //rdx -= rdi;
+            rcx = rax;
+            rdx = 0;
+            rax = 0x4A0A449EF54FB096;
+            rcx ^= rax;
+            rdx <<= 0x10;
+            rdx ^= r10;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
+            rax *= rcx;
+            rcx = 0x2009A549E21E477A;
+            rax += rcx;
+            rax ^= rbx;
+            rcx = rax;
+            rcx >>= 0x1B;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x36;
+            rax ^= rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 7:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r9 = read_qword(game_base_address + 0x5C71122);
+            rcx = 0x45FF433E6488119C;
+            rcx -= r11;
+            rax += rcx;
+            rcx = rbx;
+            rcx -= r11;
+            rax += rcx;
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
+            rcx = 0;
+            rcx <<= 0x10;
+            rcx ^= r9;
+            rcx = _byteswap_uint64(rcx);
+            rax *= read_qword(rcx + 0x9);
+            rcx = rax;
+            rcx >>= 0x24;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x1C;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x38;
+            rax ^= rcx;
+            rcx = 0x2A626BD1AE9DB971;
+            rax *= rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 8:
+        {
+            rdi = (game_base_address + 0xA7F);
+            r14 = (game_base_address + 0x28AC1A70);
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rcx = rax;
+            rcx >>= 0xF;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x1E;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x3C;
+            rax ^= rcx;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            //rdx -= rdi;
+            rcx = rax;
+            rdx = 0;
+            rcx -= r11;
+            rdx <<= 0x10;
+            rdx ^= r10;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
+            rax *= rcx;
+            rcx = rax;
+            rcx >>= 0x12;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x24;
+            rcx ^= r11;
+            rax ^= rcx;
+            rcx = 0x61C3059DB9F15C9B;
+            rax ^= r14;
+            rax *= rcx;
+            rcx = 0x18C71AD0EF38A3FB;
+            rax += rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 9:
+        {
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
             rcx = rax;
             rcx >>= 0x1;
             rax ^= rcx;
@@ -503,20 +399,82 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = rax;
             rcx >>= 0x10;
             rax ^= rcx;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
             rcx = rax;
+            //rdx -= rdi;
             rcx >>= 0x20;
-            rax ^= rcx;
-            rcx = rdi + 0x4abe5f34;
-            rcx += rbx;
+            rdx = 0;
+            rcx ^= rax;
+            rdx <<= 0x10;
+            rdx ^= r10;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
+            rax *= rcx;
+            rcx = 0xF8F2A91D0B389E33;
+            rax *= rcx;
+            rcx = 0x28A95820C535CC13;
             rax += rcx;
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
+            rcx = rax;
+            rcx >>= 0x7;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0xE;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x1C;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x38;
+            rax ^= rcx;
+            rax ^= r11;
+            rcx = (game_base_address + 0x9E5D);
+            rax ^= rcx;
+            rcx = 0x5ABEA3B89A7C265C;
+            rax -= rcx;
+            rcx = 0xFFFFFFFFFFFFA97A;
+            rcx -= r11;
+            rcx -= rbx;
+            rax += rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 10:
+        {
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            rdx = (game_base_address + 0x6B1B01C4);
+            rcx = 0x880C7445899E176A;
+            rax ^= rcx;
+            rax ^= rbx;
+            rcx = r11;
             rcx ^= rdx;
-            rcx = _byteswap_uint64(rcx);
-            rcx = read_qword(rcx + 0xd);
-            rcx *= 0xD76BA1704984D279;
+            rax -= rcx;
+            rcx = 0xA258080472A3A6BB;
+            rax *= rcx;
+            rax ^= rbx;
+            rcx = 0xE3D85F42E80A58B;
+            rax *= rcx;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            rcx = rax;
+            rcx >>= 0xE;
+            //rdx -= rdi;
+            rax ^= rcx;
+            rdx = 0;
+            rcx = rax;
+            rdx <<= 0x10;
+            rcx >>= 0x1C;
+            rdx ^= r10;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x38;
+            rcx ^= rax;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
             rax *= rcx;
 
             return rax;
@@ -525,34 +483,77 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         }
 
-        case 11: {
-            r11 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            r8 = (game_base_address + 0x6D482CE3);
-            rcx = r8;
-            //rdx = read_qword(rbp + 0xe8);
-            rcx = (~rcx);
-            //rdx -= rsi;
-            rcx += rbx;
+        case 11:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r10 = read_qword(game_base_address + 0x5C71122);
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            //rdx -= rdi;
+            rcx = rax;
+            rdx = 0;
+            rcx >>= 0x16;
+            rax ^= rcx;
+            rdx <<= 0x10;
+            rcx = rax;
+            rdx ^= r10;
+            rcx >>= 0x2C;
             rcx ^= rax;
+            rcx += rbx;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
+            rax *= rcx;
+            rcx = 0xB23AB9E375BE2697;
+            rax *= rcx;
+            rcx = (game_base_address + 0x363A);
+            rax += r11;
+            rax += rcx;
+            rdx = (game_base_address + 0x19194929);
+            rax += rbx;
+            rcx = (game_base_address + 0x5704B017);
+            rcx -= r11;
+            rax += rcx;
+            rcx = r11;
+            rcx *= rdx;
+            rax += rcx;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 12:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rcx = 0x1D09E61FFEEA736D;
+            rax *= rcx;
+            rax += r11;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            rax -= r11;
+            //rdx -= rdi;
+            rax -= rbx;
             rdx = 0;
             rdx <<= 0x10;
-            rax = 0x52981C2050FA4F22;
-            rcx ^= rax;
-            rdx ^= r11;
+            rdx ^= r10;
+            rcx = rax + 0xffffffffffff7025;
             rdx = _byteswap_uint64(rdx);
-            rax = read_qword(rdx + 0xd);
+            rax = read_qword(rdx + 0x9);
             rax *= rcx;
-            rcx = 0x35AF355E6C020F;
+            rcx = 0x6B515363DF94C679;
             rax *= rcx;
-            rcx = rax;
-            rcx >>= 0x23;
-            rax ^= rcx;
-            rax += rbx;
-            rcx = (game_base_address + 0x5879);
-            rax += rcx;
-            rax ^= rdi;
+            rdx = rax;
+            rdx >>= 0x20;
+            rdx ^= rax;
+            rcx = r11;
+            rax = (game_base_address + 0x6C9C88EA);
+            rcx ^= rax;
+            rax = rdx;
+            rax -= rcx;
+            rcx = 0x5B9B9DB413DBCABD;
+            rax *= rcx;
 
             return rax;
 
@@ -560,17 +561,32 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         }
 
-        case 12: {
-            rdi = game_base_address;
-            //nop
-            r9 = read_qword(game_base_address + 0x5B4311C);
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r9;
-            rcx = _byteswap_uint64(rcx);
-            rax *= read_qword(rcx + 0xd);
+        case 13:
+        {
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            //rdx -= rdi;
+            rdx = 0;
+            rdx <<= 0x10;
+            rcx = rax;
+            rdx ^= r10;
+            rcx -= rbx;
+            rdx = _byteswap_uint64(rdx);
+            rax = read_qword(rdx + 0x9);
+            rax *= rcx;
+            rcx = 0xD7B3BCFE65F0AECF;
+            rax -= r11;
+            rax ^= rcx;
+            rcx = 0xCE5C9608FD3E64D1;
+            rax *= rcx;
+            rcx = rax;
+            rcx >>= 0x18;
+            rax ^= rcx;
+            rcx = rax;
+            rcx >>= 0x30;
+            rax ^= rcx;
             rcx = rax;
             rcx >>= 0xD;
             rax ^= rcx;
@@ -580,108 +596,41 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = rax;
             rcx >>= 0x34;
             rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0xB;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x16;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x2C;
-            rax ^= rcx;
-            rax ^= rdi;
-            rcx = rbx;
-            rcx ^= read_qword(game_base_address + 0x1783E99);
-            rax -= rcx;
-            rcx = 0x4DC3AD3F48A93C57;
-            rax *= rcx;
-            rcx = 0x1DF312C73486CBC0;
+
+            return rax;
+
+            break;
+
+        }
+
+        case 14:
+        {
+            r10 = read_qword(game_base_address + 0x5C71122);
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            rcx = (game_base_address + 0xDF03);
+            rcx -= r11;
             rax += rcx;
             rax ^= rbx;
-            rcx = (game_base_address + 0x5EAA7860);
-            rax ^= rcx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 13: {
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            //nop
-            //nop
-            rcx = 0;
-            rcx <<= 0x10;
-            rcx ^= r10;
-            rcx = _byteswap_uint64(rcx);
-            rcx = read_qword(rcx + 0xd);
-            rcx *= 0x447CBAE743A18DB5;
-            rax *= rcx;
-            rax ^= rbx;
-            rax ^= rdi;
-            rax += rbx;
-            rcx = rax;
-            rcx >>= 0xF;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x1E;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x3C;
-            rax ^= rcx;
-            rax += rbx;
-            rax ^= rbx;
-
-            return rax;
-
-            break;
-
-        }
-
-        case 14: {
-            rdi = game_base_address;
-            //nop
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rcx = rax;
-            rcx >>= 0x3;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x6;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0xC;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x18;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x30;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x16;
-            rax ^= rcx;
-            rcx = rax;
-            rcx >>= 0x2C;
-            rax ^= rcx;
-            rcx = 0x3821D34108A8DD68;
-            rax -= rcx;
-            //rdx = read_qword(rbp + 0xe8);
-            //rdx -= rsi;
+            //rdx = RVPM<UINT64>(rbp + 0x118);
+            //rdx -= rdi;
             rdx = 0;
-            rcx = 0xA493EA00C24E6085;
-            rcx *= rax;
             rdx <<= 0x10;
-            rcx -= rbx;
+            rcx = rax;
             rdx ^= r10;
-            rcx -= rdi;
+            rcx >>= 0x23;
+            rcx ^= rax;
+            rax = 0x6DE50B2BD295E81F;
+            rcx -= rax;
             rdx = _byteswap_uint64(rdx);
-            rax = read_qword(rdx + 0xd);
+            rax = read_qword(rdx + 0x9);
             rax *= rcx;
-            rcx = 0x592808E400697AB3;
-            rax += rcx;
+            rax ^= rbx;
+            rcx = rax;
+            rcx >>= 0x20;
+            rax ^= rcx;
+            rcx = 0xDB499CA7A80C687B;
+            rax *= rcx;
 
             return rax;
 
@@ -689,11 +638,15 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         }
 
-        case 15: {
-            r10 = read_qword(game_base_address + 0x5B4311C);
-            rdi = game_base_address;
-            //nop
-            r12 = (game_base_address + 0x11499A40);
+        case 15:
+        {
+            rdi = (game_base_address + 0xA7F);
+            rbx = game_base_address;
+            r9 = read_qword(game_base_address + 0x5C71122);
+            rcx = 0x620E629D5555CD43;
+            rax *= rcx;
+            rcx = 0x86FE45A8C6CF1067;
+            rax *= rcx;
             rcx = rax;
             rcx >>= 0x4;
             rax ^= rcx;
@@ -704,37 +657,32 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx >>= 0x10;
             rax ^= rcx;
             rcx = rax;
-            //rdx = read_qword(rbp + 0xe8);
             rcx >>= 0x20;
-            //rdx -= rsi;
-            rcx ^= rax;
-            rdx = 0;
-            rcx += rbx;
-            rdx <<= 0x10;
-            rdx ^= r10;
-            rax = (game_base_address + 0x7F2B5AE2);
-            rcx += rax;
-            rdx = _byteswap_uint64(rdx);
-            rax = read_qword(rdx + 0xd);
-            rax *= rcx;
-            rcx = 0x2D383F6C0FA9B0A8;
-            rax -= rcx;
-            rdx = rbx;
-            rdx ^= r12;
-            rax += rdx;
-            rcx = rdi + 0x6437;
-            rcx += rbx;
             rax ^= rcx;
-            rcx = 0xE46D884DA5594AD1;
-            rax ^= rcx;
-            rcx = 0x2FD844FCD06F92F7;
+            rax -= r11;
+            rax += r11;
+            rcx = 0x6DCC43ECB600673F;
             rax *= rcx;
+            //rcx = RVPM<UINT64>(rbp + 0x118);
+            //rcx -= rdi;
+            rcx = 0;
+            rcx <<= 0x10;
+            rcx ^= r9;
+            rcx = _byteswap_uint64(rcx);
+            rax *= read_qword(rcx + 0x9);
+            rcx = rbx + 0x4d3592a1;
+            rcx += r11;
+            rax ^= rcx;
 
             return rax;
 
             break;
+
         }
+        }
+        return 0;
     }
+    return 0;
 }
 
 auto
