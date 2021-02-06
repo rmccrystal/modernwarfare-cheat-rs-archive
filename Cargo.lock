@@ -728,6 +728,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "imgui-ext"
+version = "0.4.0"
+dependencies = [
+ "imgui",
+ "imgui-ext-derive",
+]
+
+[[package]]
+name = "imgui-ext-derive"
+version = "0.4.0"
+dependencies = [
+ "failure",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "imgui-sys"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -953,12 +971,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "modernwarfare-cheat-rs"
+name = "mwc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "cxx",
  "cxx-build",
+ "imgui",
+ "imgui-ext",
  "lazy_static",
  "log",
  "memlib",

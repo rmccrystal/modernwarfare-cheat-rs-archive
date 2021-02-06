@@ -34,7 +34,7 @@ pub struct RefdefKeyStruct {
 }
 
 pub fn get_refdef_pointer(game_base_address: Address) -> Result<Pointer<RefDef>> {
-    let crypt: RefdefKeyStruct = read_memory(game_base_address + offsets::REFDEF as u64);
+    let crypt: RefdefKeyStruct = try_read_memory(game_base_address + offsets::REFDEF as u64)?;
 
     if crypt.ref0 == 0 && crypt.ref1 == 0 && crypt.ref2 == 0 {
         bail!("Read 0 for refdef key struct");
@@ -45,6 +45,9 @@ pub fn get_refdef_pointer(game_base_address: Address) -> Result<Pointer<RefDef>>
     let upper: Wrapping<u64> = (Wrapping(crypt.ref1 as u64) ^ Wrapping(crypt.ref2 as u64 ^ (game_base_address + offsets::REFDEF as u64 + 0x4)) * Wrapping((crypt.ref2 as u64 ^ (game_base_address + offsets::REFDEF as u64 + 0x4)) + 2));
     let ref_def_key = (upper.0 as u32 as u64) << 32 | (lower.0 as u32 as u64);
 
+    if read_bytes(ref_def_key, 1).is_err() {
+        bail!("Refdef not valid");
+    }
     let ref_def_pointer: Pointer<RefDef> = Pointer::new(ref_def_key);
 
     trace!("ref_def_key: 0x{:X}", ref_def_key);

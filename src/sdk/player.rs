@@ -20,16 +20,16 @@ pub struct Player {
     pub stance: CharacterStance,
     pub health: i32,
     pub ads: bool,
+    pub reloading: bool,
     pub base_address: Address,
 }
 
 impl Player {
     pub fn new(game: &Game, base_address: Address, index: i32) -> Result<Self> {
-        // let valid: i32 = try_read_memory(base_address + character_info::VALID).ok()?;
-        // if valid != 1 {
-        //     trace!("Invalidated player because valid was {}", valid);
-        //     return None;
-        // }
+        let valid: i32 = try_read_memory(base_address + character_info::VALID).context("Could not read is_valid")?;
+        if valid != 1 {
+            bail!("Invalidated player because valid was {}", valid);
+        }
 
         let position_address: Address = try_read_memory(base_address + character_info::POS_PTR)?;
         if position_address == 0 {
@@ -56,10 +56,9 @@ impl Player {
 
         let stance: CharacterStance = read_memory(base_address + character_info::STANCE);
         // let stance = CharacterStance::Standing;
-        // let entity_num: i32 = read_memory(base_address + character_info::ENTITY_NUM);
         let team: i32 = read_memory(base_address + character_info::TEAM);
-        // let ads: i32 = read_memory(base_address + character_info::ADS);
-        // let reloading: bool = read_memory(base_address + character_info::RELOAD);
+        let ads = read_memory::<i32>(base_address + character_info::ADS) == 1;
+        let reloading = read_memory::<i32>(base_address + character_info::RELOAD) == 121;
 
         let name_struct = game.get_name_struct(index as u32);
         if name_struct.health <= 0 {
@@ -77,7 +76,8 @@ impl Player {
             // ads: char_info.ads == 1,
             // stance: CharacterStance::STANDING,
             // ads: ads == 1,
-            ads: false,
+            ads,
+            reloading,
             health: name_struct.health,
             base_address,
         })

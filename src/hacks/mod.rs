@@ -17,6 +17,7 @@ use memlib::overlay::imgui::{Imgui, ImguiConfig};
 use memlib::overlay::window::Window;
 use win_key_codes::VK_INSERT;
 use std::time::Instant;
+use imgui_ext::UiExt;
 
 
 pub mod aimbot;
@@ -83,28 +84,27 @@ pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>) {
         let window = Window::hijack_nvidia().unwrap();
         let mut imgui = Imgui::from_window(
             window,
-            ImguiConfig{toggle_menu_key: Some(VK_INSERT), align_to_pixel: true}
+            ImguiConfig { toggle_menu_key: Some(VK_INSERT), align_to_pixel: true },
         ).unwrap();
 
         imgui.main_loop(|ui, ctx| {
             use memlib::overlay::imgui::*;
 
+            let mut state = shared_state.lock().unwrap().clone();
+
             Window::new(im_str!("test"))
                 .build(&ui, || {
-                    ui.text(ui.io().framerate.to_string());
-                    ui.button(im_str!("button"), [100.0, 200.0]);
-                })
-        }, |overlay| {
-            overlay.draw_text((50, 50).into(), "MWC", TextOptions::default()
-                .style(TextStyle::Shadow)
-                .font(Font::Verdana));
+                    ui.draw_gui(&mut state.config);
+                });
 
+            *shared_state.lock().unwrap() = state;
+        }, |overlay| {
             let mut state = shared_state.lock().unwrap().clone();
 
             let game_info = match state.game.get_game_info() {
                 Ok(n) => n,
                 Err(e) => {
-                    return
+                    return;
                 }
             };
 

@@ -6,11 +6,24 @@ use crate::hacks::esp::EspConfig;
 use memlib::winutil::is_key_down;
 
 // The config struct passed in the main hack loop
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, imgui_ext::Gui)]
 pub struct Config {
+    #[imgui(text_wrap("Aimbot"),
+            separator(),
+            nested)]
     pub aimbot_config: AimbotConfig,
-    pub cloest_player_config: ClosestPlayerConfig,
+
+    #[imgui(text_wrap("ESP"),
+            separator(),
+            nested)]
     pub esp_config: EspConfig,
+
+    #[imgui(text_wrap("Util"),
+            separator(),
+            nested)]
+    pub cloest_player_config: ClosestPlayerConfig,
+
+    #[imgui(checkbox(label = "No Recoil"))]
     pub no_recoil_enabled: bool,
     pub friends: Vec<String>    // Will consider friends teammates
 }

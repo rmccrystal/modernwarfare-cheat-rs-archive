@@ -17,7 +17,6 @@ use win_key_codes::VK_INSERT;
 mod sdk;
 mod hacks;
 mod config;
-mod gui;
 
 pub const PROCESS_NAME: &str = "ModernWarfare.exe";
 pub const CHEAT_TICKRATE: u64 = 50;

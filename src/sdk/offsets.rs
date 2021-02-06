@@ -33,11 +33,10 @@ pub mod character_info {
     pub const VALID: Address = 0x6DC;
     pub const POS_PTR: Address = 0xA0;
     pub const TEAM: Address = 0x37C0;
-    // pub const ENTITY_NUM: Address = 0x4B4;
     pub const STANCE: Address = 0xB94;
     pub const DEATH: Address = 0x3994;
-    // pub const ADS: Address = 0xCFC;
-    // pub const RELOAD: Address = 0xA26;
+    pub const ADS: Address = 0xBD4;
+    pub const RELOAD: Address = 0x644;
 }
 
 pub mod client_info {

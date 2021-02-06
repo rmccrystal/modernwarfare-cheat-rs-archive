@@ -6,20 +6,27 @@ use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
 use memlib::math::Vector3;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, imgui_ext::Gui)]
 pub struct AimbotConfig {
+    #[imgui(checkbox(label = "Aimbot enabled"))]
     pub enabled: bool,
+    #[imgui(checkbox(label = "Aim at teams"))]
     pub teams: bool,
     pub bone: Bone,
+    #[imgui(slider(min = 0.0, max = 180.0, label = "Aimbot FOV"))]
     pub fov: f32,
     // FOV in degrees
+    #[imgui(slider(min = 0.5, max = 25.0, label = "Aimbot Smooth"))]
     pub smooth: f32,
     // 1 is instant, 1+ is smooth
     pub keybind: Keybind,
+    #[imgui(checkbox(label = "Aimbot aimlock"))]
     pub aim_lock: bool,
     // Will lock onto the same player until button stops being pressed
+    #[imgui(slider(min = 0.0, max = 2000.0, label = "Aimbot distance limit (m)"))]
     pub distance_limit: f32,
     // Distance limit in meteres
+    #[imgui(checkbox(label = "Aim at downed"))]
     pub aim_at_downed: bool,
 }
 
@@ -120,6 +127,13 @@ fn get_target<'a, 'g>(game_info: &'a GameInfo, config: &AimbotConfig, get_aim_po
                 return false;
             }
 
+            // Filter out of fov
+            let fov = math::calculate_relative_angles(&local_position, &position, &local_view_angles).length();
+            if fov > config.fov {
+                return false;
+            }
+
+
             // Filter out players too far away
             let distance = (position - local_position).length();
 
@@ -161,7 +175,7 @@ fn aim_at(game_info: &GameInfo, target: &Player, config: &AimbotConfig, get_aim_
            target.stance
     );
 
-    let new_delta = delta / (config.smooth * crate::CHEAT_TICKRATE as f32);
+    let new_delta = delta / ((config.smooth / 2.0) * crate::CHEAT_TICKRATE as f32);
 
     let mouse_multiplier = 250.0;
     let dx = -new_delta.yaw * mouse_multiplier;

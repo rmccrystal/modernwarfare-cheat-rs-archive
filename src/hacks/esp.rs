@@ -2,7 +2,6 @@ use std::cmp;
 use std::cmp::Ordering;
 
 use memlib::math::{Vector2, Vector3};
-use memlib::overlay::*;
 use memlib::unwrap_or_return;
 use rand::{RngCore, SeedableRng};
 
@@ -12,15 +11,23 @@ use crate::sdk::{Game, Player, units_to_m, GameInfo};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
 
-#[derive(Copy, Clone, Debug)]
+use imgui;
+use memlib::overlay::{Color, Draw};
+
+#[derive(Copy, Clone, Debug, imgui_ext::Gui)]
 pub struct EspConfig {
+    #[imgui(checkbox(label = "ESP Enabled"))]
+    enabled: bool,
     name_color: Color,
     box_color: Color,
     highlighted_box_color: Color,
+    #[imgui(slider(min = 0.0, max = 2000.0, label = "ESP max distance"))]
     max_distance: f32,
+    #[imgui(checkbox(label = "ESP teams"))]
     teams: bool,
     opacity: u8,
     skeleton: bool,
+    #[imgui(slider(min = 0.0, max = 500.0, label = "ESP extra info cutoff"))]
     extra_info_distance: f32,
 }
 
@@ -35,6 +42,7 @@ impl EspConfig {
             opacity: 200,
             skeleton: false,
             extra_info_distance: 200.0,
+            enabled: true,
         }
     }
 }
@@ -45,6 +53,10 @@ pub struct EspContext {
 
 pub fn esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &Config, aimbot_context: &AimbotContext) {
     let esp_config = &config.esp_config;
+
+    if !esp_config.enabled {
+        return
+    }
 
     let mut players = game_info.players.clone();
     let local_origin = &game_info.local_position;
@@ -72,6 +84,8 @@ pub fn esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &Config, aimbo
 }
 
 pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfig, player: &Player, highlighted: bool) {
+    use memlib::overlay::*;
+
     let distance = units_to_m((game_info.local_player.origin - player.origin).length());
     if distance > config.max_distance {
         return;
@@ -177,6 +191,9 @@ pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfi
         if player.ads {
             draw_flag("ADS", Color::from_hex(0xA75A97).opacity(config.opacity));
         }
+        if player.reloading {
+            draw_flag("R", Color::from_hex(0xA75A97).opacity(config.opacity));
+        }
         // draw_flag(&format!("{}", player.team), team_color.opacity(config.opacity));
     }
 
@@ -186,6 +203,8 @@ pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfi
 }
 
 pub fn draw_skeleton(game: &Game, overlay: &mut impl Draw, player: &Player, color: Color, thickness: f32) {
+    use memlib::overlay::*;
+
     for (bone1, bone2) in crate::sdk::bone::BONE_CONNECTIONS {
         let pos1 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, *bone1).ok())));
         let pos2 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, *bone2).ok())));

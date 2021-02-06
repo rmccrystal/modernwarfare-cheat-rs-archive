@@ -1,5 +1,6 @@
 [package]
-name = "modernwarfare-cheat-rs"
+#name = "modernwarfare-cheat-rs"
+name = "mwc"
 version = "0.1.0"
 authors = ["Ryan McCrystal <rrmccrystal@gmail.com>"]
 edition = "2018"
@@ -14,6 +15,8 @@ lazy_static = "*"
 cxx = "0.4.2"
 rand = { version = "0.7.3", features = ["small_rng"] }
 anyhow = "1.0.38"
+imgui-ext = { path = "../imgui-ext" }
+imgui = "0.6.1"
 
 [build-dependencies]
 cxx-build = "0.4.2"

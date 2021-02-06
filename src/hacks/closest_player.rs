@@ -5,10 +5,13 @@ use log::*;
 use memlib::overlay::{Color, TextStyle, Font, TextOptions, Draw};
 use memlib::math::Vector2;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, imgui_ext::Gui)]
 pub struct ClosestPlayerConfig {
+    #[imgui(checkbox(label = "Closest player Enabled"))]
     pub enabled: bool,
+    #[imgui(checkbox(label = "Closest player ignore downed"))]
     pub ignore_downed: bool,
+    #[imgui(checkbox(label = "Closest player ignore teammates"))]
     pub ignore_teammates: bool,
 }
 
