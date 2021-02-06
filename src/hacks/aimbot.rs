@@ -4,9 +4,10 @@ use memlib::{math, system};
 use crate::config::{Keybind, Config};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
+use serde::{Serialize, Deserialize};
 use memlib::math::Vector3;
 
-#[derive(Clone, Debug, imgui_ext::Gui)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, imgui_ext::Gui)]
 pub struct AimbotConfig {
     #[imgui(checkbox(label = "Aimbot enabled"))]
     pub enabled: bool,

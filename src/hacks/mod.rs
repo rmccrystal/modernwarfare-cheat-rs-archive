@@ -29,7 +29,7 @@ pub mod esp;
 /// Returns an error if there is an error with any of the tick functions
 pub fn hack_loop(mut _game: Game) -> Result<()> {
     // Use the default config. We can change this later to load from a file
-    let config = Config::default();
+    let config = Config::load().unwrap_or_default();
 
     // Create a timer from the tickrate of the cheat
     let mut timer = LoopTimer::new(crate::CHEAT_TICKRATE);
@@ -92,10 +92,17 @@ pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>) {
 
             let mut state = shared_state.lock().unwrap().clone();
 
+            let prev_config = state.config.clone();
+
             Window::new(im_str!("test"))
                 .build(&ui, || {
                     ui.draw_gui(&mut state.config);
                 });
+
+            if state.config != prev_config {
+                debug!("Saving config");
+                state.config.save();
+            }
 
             *shared_state.lock().unwrap() = state;
         }, |overlay| {

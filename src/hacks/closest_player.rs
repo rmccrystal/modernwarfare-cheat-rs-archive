@@ -4,8 +4,9 @@ use crate::config::{Keybind, Config};
 use log::*;
 use memlib::overlay::{Color, TextStyle, Font, TextOptions, Draw};
 use memlib::math::Vector2;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, imgui_ext::Gui)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, imgui_ext::Gui)]
 pub struct ClosestPlayerConfig {
     #[imgui(checkbox(label = "Closest player Enabled"))]
     pub enabled: bool,

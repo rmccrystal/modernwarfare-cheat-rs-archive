@@ -10,11 +10,12 @@ use crate::hacks::aimbot::AimbotContext;
 use crate::sdk::{Game, Player, units_to_m, GameInfo};
 use crate::sdk::bone::Bone;
 use crate::sdk::structs::CharacterStance;
+use serde::{Serialize, Deserialize};
 
 use imgui;
 use memlib::overlay::{Color, Draw};
 
-#[derive(Copy, Clone, Debug, imgui_ext::Gui)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, imgui_ext::Gui)]
 pub struct EspConfig {
     #[imgui(checkbox(label = "ESP Enabled"))]
     enabled: bool,

@@ -6,9 +6,10 @@ use anyhow::*;
 use log::*;
 use super::{offsets};
 use crate::sdk::{Game, GameAddresses};
+use serde::{Serialize, Deserialize};
 
 #[repr(u32)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub enum Bone {
     Head = 7,
     Neck = 6,
