@@ -13,6 +13,7 @@ use memory::Handle;
 use memlib::overlay::imgui::{Imgui, ImguiConfig};
 use memlib::overlay::window::Window;
 use win_key_codes::VK_INSERT;
+use msgbox::IconType;
 
 mod sdk;
 mod hacks;
@@ -30,13 +31,16 @@ fn run() -> Result<()> {
     // Create a handle to the game
     let handle = Handle::from_interface(DriverProcessHandle::attach(PROCESS_NAME)?);
 
+    let window = Window::hijack_nvidia()?;
+    window.bypass_screenshots(true);
+
     memlib::system::init().unwrap();
 
     // Create a game struct from the handle
     let game = sdk::Game::new(handle)?;
 
     // Run the hack loop
-    hacks::hack_loop(game)?;
+    hacks::hack_loop(game, window)?;
 
     Ok(())
 }
@@ -49,6 +53,7 @@ fn main() {
         }
         Err(err) => {
             error!("{}", err);
+            msgbox::create("Cryptx Error", &err.to_string(), IconType::Error);
             1
         }
     })

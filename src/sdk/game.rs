@@ -11,7 +11,7 @@ use memlib::math::{Angles2, Vector3, Vector2};
 use crate::sdk::structs::{RefDef};
 use crate::sdk::world_to_screen::world_to_screen;
 use std::time::{Duration, Instant};
-use std::ops::Sub;
+use std::ops::{Sub, Add};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// The single tick state of the cheat
@@ -61,9 +61,11 @@ impl Game {
 
     /// This function updates the game data. Should be ran every game tick
     pub fn update_addresses(&mut self) {
-        if self.last_update + self.address_update_frequency < Instant::now() {
+        let now = Instant::now();
+        if now > self.last_update.add(self.address_update_frequency) {
+            println!("update");
             self.addresses.update();
-            self.last_update = Instant::now();
+            self.last_update = now;
         }
     }
 
