@@ -40,7 +40,7 @@ fn run() -> Result<()> {
     let game = sdk::Game::new(handle)?;
 
     // Run the hack loop
-    hacks::hack_loop(game, window)?;
+    hacks::hack_main(game, window)?;
 
     Ok(())
 }

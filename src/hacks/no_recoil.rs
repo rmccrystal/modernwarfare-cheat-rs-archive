@@ -1,4 +1,4 @@
-use memlib::memory::{write_memory, Address, read_memory};
+use memlib::memory::{write_memory, Address, read_memory, write_bytes};
 use crate::sdk::offsets;
 use std::sync::mpsc::{Sender, channel};
 use std::num::Wrapping;
@@ -25,7 +25,7 @@ impl NoRecoilState {
     }
 }
 
-const NO_RECOIL_THREADS: u32 = 5;
+const NO_RECOIL_THREADS: u32 = 1;
 static WRITE_COUNTER: AtomicI64 = AtomicI64::new(0);
 
 pub fn start_no_recoil_thread() -> Sender<NoRecoilState> {
@@ -42,7 +42,7 @@ pub fn start_no_recoil_thread() -> Sender<NoRecoilState> {
         let state = shared_state.clone();
         thread::spawn(move || {
             loop {
-                let state = state.lock().unwrap();
+                let state = state.lock().unwrap().clone();
                 if state.client_info_base.is_none() || !state.in_game || !state.enabled {
                     continue;
                 }
@@ -92,6 +92,10 @@ fn no_recoil_tick(client_info_base: Address) {
     eax = eax * ecx;
     let val2 = eax.0;
 
-    write_memory(address, ((val1 as u64) << 32) + val2 as u64);
+    let mut bytes = [0; 8];
+    bytes[0..=3].clone_from_slice(&val1.to_ne_bytes());
+    bytes[4..=7].clone_from_slice(&val2.to_ne_bytes());
+
+    write_bytes(address, &bytes);
     WRITE_COUNTER.fetch_add(1, Ordering::SeqCst);
 }

@@ -63,7 +63,6 @@ impl Game {
     pub fn update_addresses(&mut self) {
         let now = Instant::now();
         if now > self.last_update.add(self.address_update_frequency) {
-            println!("update");
             self.addresses.update();
             self.last_update = now;
         }

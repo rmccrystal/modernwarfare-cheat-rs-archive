@@ -27,7 +27,7 @@ pub mod esp;
 
 /// The main loop of the cheat
 /// Returns an error if there is an error with any of the tick functions
-pub fn hack_loop(mut _game: Game) -> Result<()> {
+pub fn hack_main(mut _game: Game, window: Window) -> Result<()> {
     // Use the default config. We can change this later to load from a file
     let config = Config::load().unwrap_or_default();
 
@@ -44,13 +44,13 @@ pub fn hack_loop(mut _game: Game) -> Result<()> {
     // Start render loop
     start_overlay_thread(
         shared_state.clone(),
+        window
     );
-    // let no_recoil_state_sender = no_recoil::start_no_recoil_thread();
+    let no_recoil_state_sender = no_recoil::start_no_recoil_thread();
 
     loop {
         timer.wait();
 
-        let now = Instant::now();
         let mut state = shared_state.lock().unwrap().clone();
 
         state.game.update_addresses();
@@ -59,15 +59,19 @@ pub fn hack_loop(mut _game: Game) -> Result<()> {
             Err(_) => continue
         };
 
-        // no_recoil_state_sender.send(NoRecoilState {
-        //     enabled: config.no_recoil_enabled,
-        //     client_info_base: game.client_info_base,
-        //     in_game: game.in_game(),
-        // }).expect("Failed to send NoRecoilState");
+        no_recoil_state_sender.send(NoRecoilState {
+            enabled: state.config.no_recoil_enabled,
+            client_info_base: state.game.addresses.client_info_base,
+            in_game: true,
+        }).expect("Failed to send NoRecoilState");
 
         aimbot::aimbot(&game_info, &state.config, &mut state.aimbot_context);
 
-        *shared_state.lock().unwrap() = state;
+        {
+            let mut current_state = shared_state.lock().unwrap();
+            current_state.aimbot_context = state.aimbot_context;
+            current_state.game = state.game;
+        }
     }
 }
 
@@ -79,9 +83,8 @@ pub struct CheatState {
 }
 
 /// Returns a sender for new game updates
-pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>) {
+pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>, window: Window) {
     spawn(move || {
-        let window = Window::hijack_nvidia().unwrap();
         let mut imgui = Imgui::from_window(
             window,
             ImguiConfig { toggle_menu_key: Some(VK_INSERT), align_to_pixel: true },
@@ -104,7 +107,10 @@ pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>) {
                 state.config.save();
             }
 
-            *shared_state.lock().unwrap() = state;
+            {
+                let mut new_state = shared_state.lock().unwrap();
+                new_state.config = state.config;
+            }
         }, |overlay| {
             let mut state = shared_state.lock().unwrap().clone();
 
@@ -117,8 +123,6 @@ pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>) {
 
             esp::esp(&game_info, overlay, &state.config, &state.aimbot_context);
             closest_player::closest_player(&game_info, &state.config, overlay);
-
-            *shared_state.lock().unwrap() = state;
         });
     });
 }
