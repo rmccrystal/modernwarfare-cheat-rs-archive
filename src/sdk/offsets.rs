@@ -2,12 +2,12 @@
 
 use memlib::memory::Address;
 
-pub const REFDEF: Address = 0x165970B0;
+pub const REFDEF: Address = 0x16501130;
 
-pub const NAME_ARRAY: Address = 0x165A2308;
+pub const NAME_ARRAY: Address = 0x1650C388;
 pub const NAME_LIST_OFFSET: Address = 0x4C70;
 
-pub const CAMERA_POINTER: Address = 0x133E4040;
+pub const CAMERA_POINTER: Address = 0x1334E040;
 pub const CAMERA_OFFSET: Address = 0x1D8;
 
 pub const INDEX_ARRAY: Address = 0x4D58F90;
@@ -15,7 +15,7 @@ pub const INDEX_ARRAY: Address = 0x4D58F90;
 pub const LOCAL_INDEX_POINTER: Address = 0x836C8;
 pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
-pub const NO_RECOIL: Address = 0x93A1C;
+pub const NO_RECOIL: Address = 0x8C048;
 
 pub mod entity {
     use memlib::memory::Address;
@@ -29,20 +29,21 @@ pub mod entity {
 pub mod character_info {
     use memlib::memory::Address;
 
-    pub const SIZE: usize = 0x3A68;
-    pub const VALID: Address = 0x6DC;
-    pub const POS_PTR: Address = 0xA0;
-    pub const TEAM: Address = 0x37C0;
-    pub const STANCE: Address = 0xB94;
-    pub const DEATH: Address = 0x3994;
-    pub const ADS: Address = 0xBD4;
-    pub const RELOAD: Address = 0x644;
+    pub const SIZE: usize = 0x3A88;
+    pub const VALID: Address = 0x64C;
+    pub const POS_PTR: Address = 0x37E8;
+    pub const TEAM: Address = 0x12D8;
+    pub const STANCE: Address = 0x958;
+    pub const DEAD_1: Address = 0x81C;
+    pub const DEAD_2: Address = 0x2BC;
+    pub const ADS: Address = 0xBD4; // not working
+    pub const RELOAD: Address = 0x644;  // not working
 }
 
 pub mod client_info {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x16594688;
+    pub const ENCRYPTED_PTR: Address = 0x164FE708;
     pub const REVERSED_ADDRESS: Address = 0x5c710f6;
     pub const DISPLACEMENT: Address = 0x7;
 }
@@ -50,7 +51,7 @@ pub mod client_info {
 pub mod client_base {
     use memlib::memory::Address;
 
-    pub const BASE_OFFSET: Address = 0x98C78;
+    pub const BASE_OFFSET: Address = 0x98C88;
     pub const BASE_REVERSED_ADDR: Address = 0x4D47115;
     pub const BASE_DISPLACEMENT: Address = 0x15;
 }

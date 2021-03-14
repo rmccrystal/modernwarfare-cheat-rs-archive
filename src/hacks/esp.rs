@@ -20,6 +20,11 @@ pub struct EspConfig {
     #[imgui(checkbox(label = "ESP Enabled"))]
     enabled: bool,
     name_color: Color,
+    // #[imgui(
+    //     color(button(preview = "Alpha", input_mode = "RGB")),
+    //     color(edit(preview = "HalfAlpha", input_mode = "RGB")),
+    //     color(picker(mode = "HueWheel", input_mode = "RGB"))
+    // )]
     box_color: Color,
     highlighted_box_color: Color,
     #[imgui(slider(min = 0.0, max = 2000.0, label = "ESP max distance"))]

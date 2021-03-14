@@ -22,7 +22,13 @@ mod ffi {
 }
 
 fn read_qword(address: u64) -> u64 {
-    memlib::memory::try_read_memory(address).expect("Error reading memory in cpp encryption")
+    match memlib::memory::try_read_memory(address) {
+        Ok(value) => value,
+        Err(e) => {
+            error!("Error reading memory in C++ encryption code: {:?}", e);
+            0
+        }
+    }
 }
 
 #[repr(C)]
@@ -68,7 +74,8 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     trace!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
     // Get last_key
-    let last_key = get_last_key_byteswap(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)?;
+    // let last_key = get_last_key_byteswap(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)?;
+    let last_key = 0;
 
     trace!("Found client_info last_key: 0x{:X}", last_key);
 

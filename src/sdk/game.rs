@@ -132,6 +132,9 @@ impl Game {
 impl Game {
     pub(crate) fn get_camera_position(&self) -> Option<Vector3> {
         let camera_addr: Address = read_memory(self.addresses.game_base_address + offsets::CAMERA_POINTER);
+        if camera_addr == 0 {
+            return None;
+        }
         let pos: Vector3 = read_memory(camera_addr + offsets::CAMERA_OFFSET);
         if pos.is_zero() {
             return None;
