@@ -28,7 +28,7 @@ impl Player {
     pub fn new(game: &Game, base_address: Address, index: i32) -> Result<Self> {
         let valid: i32 = try_read_memory(base_address + character_info::VALID).context("Could not read is_valid")?;
         if valid != 1 {
-            bail!("Invalidated player because valid was {}", valid);
+            bail!("Valid was {}", valid);
         }
 
         let position_address: Address = try_read_memory(base_address + character_info::POS_PTR)?;

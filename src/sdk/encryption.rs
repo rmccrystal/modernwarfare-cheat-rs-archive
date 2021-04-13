@@ -74,12 +74,13 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
     trace!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
     // Get last_key
+
     // let last_key = get_last_key_byteswap(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)?;
-    let last_key = 0;
+    // let last_key = 0;
 
-    trace!("Found client_info last_key: 0x{:X}", last_key);
+    // trace!("Found client_info last_key: 0x{:X}", last_key);
 
-    let decrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, last_key, get_peb()) };
+    let decrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, 0, get_peb()) };
 
     if decrypted_address > 0xFFFFFFFFFFFFFF {
         trace!("Invalidated client_info because the address was too large: 0x{:X}", decrypted_address);
@@ -108,10 +109,10 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     // we don't need it, the cpp interop reads mem
     let last_key = 0;
 
-    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, last_key, get_peb() )};
+    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, last_key, get_peb()) };
 
     if read_bytes(decrypted_address, 1).is_err() {
-        bail!("Decrypted client base was invalid: {:X}", decrypted_address);
+        bail!("Decrypted client base was invalid: 0x{:X}", decrypted_address);
     }
 
     trace!("Found decrypted client_info_base address: 0x{:X}", decrypted_address);
@@ -128,7 +129,7 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
 
     let last_key = get_last_key(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)?;
 
-    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, last_key, get_peb() )};
+    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, last_key, get_peb()) };
 
     trace!("Found decrypted bone_base address: 0x{:X}", decrypted_address);
     Ok(decrypted_address)
