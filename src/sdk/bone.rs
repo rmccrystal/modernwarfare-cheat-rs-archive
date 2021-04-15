@@ -40,6 +40,9 @@ pub enum Bone {
 
 use Bone::*;
 use std::mem::size_of;
+use crate::sdk::encryption::get_bone_index;
+use offsets::bones;
+use bones::INDEX_STRUCT_SIZE;
 
 // Bone connections for a skeleton ESP
 pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
@@ -70,27 +73,25 @@ pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
 ];
 
 
-pub fn get_bone_position(addresses: &GameAddresses, entity_num: i32, bone_index: u32) -> Result<Vector3> {
+pub fn get_bone_position(addresses: &GameAddresses, entity_num: i32, bone: u32) -> Result<Vector3> {
     let bone_base = addresses.bone_base.ok_or(anyhow!("Could not find bone_base"))?;
 
-    let bone_ptr_index: u16 = read_memory(addresses.game_base_address + offsets::bones::INDEX_ARRAY + (entity_num as u64 * size_of::<u16>() as u64));
-    trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);
+    // let bone_ptr_index: u16 = read_memory(addresses.game_base_address + offsets::bones::INDEX_ARRAY + (entity_num as u64 * size_of::<u16>() as u64));
+    let bone_index = get_bone_index(entity_num as _, addresses.game_base_address);
 
-    let bone_ptr: Address = read_memory(bone_base + (bone_ptr_index as u64 * offsets::bones::INDEX_STRUCT_SIZE as u64) + 0xC0);
+    let bone_ptr: Address = read_memory(bone_base + (bone_index * INDEX_STRUCT_SIZE as u64) + 0xC0);
     if bone_ptr == 0 {
         bail!("Could not find bone_ptr");
     }
     trace!("Found bone_ptr: 0x{:X}", bone_ptr);
 
-    let mut bone_pos: Vector3 = read_memory(bone_ptr as u64 + (bone_index as u64 * 0x20) + 0x10);
+    let bone_pos: Vector3 = read_memory(bone_ptr as u64 + (bone as u64 * 0x20) + 0x10);
     if bone_pos.is_zero() {
         bail!("Could not find bone_pos");
     }
 
     let client_info = addresses.client_info_base.ok_or(anyhow!("Could not find client_info_base"))?;
-    let base_pos: Vector3 = read_memory(client_info + offsets::bones::BASE_POS);
+    let base_pos: Vector3 = read_memory(client_info + bones::BASE_POS);
 
-    bone_pos = bone_pos + base_pos;
-
-    Ok(bone_pos)
+    Ok(bone_pos + base_pos)
 }

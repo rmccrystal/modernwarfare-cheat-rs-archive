@@ -58,7 +58,6 @@ pub mod bones {
 
     pub const ENCRYPTED_PTR: Address = 0x14A89A98;
     pub const BASE_POS: Address = 0x1F86C;
-    pub const INDEX_ARRAY: Address = 0x4D58F90;
     pub const INDEX_STRUCT_SIZE: usize = 0x150;
 }
 

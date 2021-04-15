@@ -1,7 +1,17 @@
 #include "encryption.h"
 #include <iostream>
+#include <intrin.h>
 
-extern auto read_qword(uint64_t address) -> uint64_t;
+#pragma intrinsic(_umul128)
+
+extern void interop_read_bytes(uint64_t address, uint64_t size, size_t buf);
+
+template<typename T>
+auto read(uint64_t address) -> T {
+    T result;
+    interop_read_bytes(address, sizeof(T), (size_t) &result);
+    return result;
+}
 
 auto decrypt_client_info(uint64_t encrypted_address, uint64_t game_base_address, uint64_t _last_key,
                          uint64_t peb) -> uint64_t {
@@ -23,7 +33,7 @@ auto decrypt_client_info(uint64_t encrypted_address, uint64_t game_base_address,
     rcx &= 0xffffffffc0000000;
     rax ^= rbx;
     rcx <<= 0x10;
-    rcx ^= read_qword(baseModuleAddr + 0x5C5A110);
+    rcx ^= read<QWORD>(baseModuleAddr + 0x5C5A110);
     rax ^= rdx;
     rdx = 0xF1437CC9A0155F3;
     rax ^= rdx;
@@ -31,7 +41,7 @@ auto decrypt_client_info(uint64_t encrypted_address, uint64_t game_base_address,
     rax *= rdx;
     rcx = _byteswap_uint64(rcx);
     rax += r8;
-    rbx = read_qword(rcx + 0x13);
+    rbx = read<QWORD>(rcx + 0x13);
     rbx *= rax;
 
     return rbx;
@@ -56,15 +66,15 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
     switch (clientBaseSwitch) {
         case 0: {
             rbx = (baseModuleAddr + 0xB4E);
-            r9 = read_qword(baseModuleAddr + 0x5C5A121);
-//            rcx = read_qword(rbp + 0xf8);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A121);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0; // new
             rcx <<= 0x10;
             rcx ^= r9;
             rcx = (~rcx);
-            rax *= read_qword(rcx + 0x19);
+            rax *= read<QWORD>(rcx + 0x19);
             rcx = baseModuleAddr;
             rcx += 0xBDE9;
             rcx += r11;
@@ -89,7 +99,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         case 1: {
             rbx = (baseModuleAddr + 0xB4E);
             r15 = (baseModuleAddr + 0x2B8B);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = rax;
             rcx >>= 0x24;
             rax ^= rcx;
@@ -108,7 +118,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax ^= r15;
             rcx = 0x555DDC944D0D943D;
             rax *= rcx;
-//            rdx = read_qword(rbp + 0xf8);
+//            rdx = read<QWORD>(rbp + 0xf8);
             rcx = r11 + rax * 1;
 //            rdx -= rbx;
             rax = (baseModuleAddr + 0xE3EE);
@@ -118,7 +128,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rdx <<= 0x10;
             rdx ^= r10;
             rdx = (~rdx);
-            rax = read_qword(rdx + 0x19);
+            rax = read<QWORD>(rdx + 0x19);
             rax *= rcx;
             rcx = 0xC490B2C8238CFF77;
             rax ^= rcx;
@@ -129,7 +139,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         }
 
         case 2: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rbx = (baseModuleAddr + 0xB4E);
             r14 = (baseModuleAddr + 0x19528CF7);
             rcx = 0xEB6C0C4437042F3B;
@@ -137,7 +147,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = rax;
             rcx >>= 0x17;
             rax ^= rcx;
-//            rdx = read_qword(rbp + 0xf8);
+//            rdx = read<QWORD>(rbp + 0xf8);
 //            rdx -= rbx;
             rcx = rax;
 //            rdx &= 0xffffffffc0000000;
@@ -148,7 +158,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rdx ^= r10;
             rdx = (~rdx);
             // rdx is a valid ptr here
-            rax = read_qword(rdx + 0x19);
+            rax = read<QWORD>(rdx + 0x19);
             rax *= rcx;
             rcx = r11;
             rcx *= r14;
@@ -167,7 +177,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         case 3: {
             rbx = (baseModuleAddr + 0xB4E);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = baseModuleAddr;
             rax -= rcx;
             rcx = 0x4618B6F51371DD2F;
@@ -185,21 +195,21 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax += rdx;
             rcx = 0x419974F479D310C4;
             rax ^= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rax *= read_qword(rcx + 0x19);
+            rax *= read<QWORD>(rcx + 0x19);
             rax += r11;
             return rax;
             break;
         }
 
         case 4: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rbx = (baseModuleAddr + 0xB4E);
             r15 = (baseModuleAddr + 0x3480EDD9);
             rax ^= r11;
@@ -209,7 +219,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax *= rcx;
             rax -= r11;
             rcx = rax;
-//            rdx = read_qword(rbp + 0xf8);
+//            rdx = read<QWORD>(rbp + 0xf8);
             rcx >>= 0x13;
 //            rdx -= rbx;
             rax ^= rcx;
@@ -221,7 +231,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = rax;
             rcx >>= 0x26;
             rcx ^= rax;
-            rax = read_qword(rdx + 0x19);
+            rax = read<QWORD>(rdx + 0x19);
             rax *= rcx;
             rcx = 0x87AC0291A4EF2062;
             rax ^= rcx;
@@ -236,7 +246,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         }
 
         case 5: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rbx = (baseModuleAddr + 0xB4E);
             rcx = rax;
             rcx >>= 0x1F;
@@ -247,14 +257,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = 0x1A324B89D41EFCF7;
             rax += rcx;
             rax ^= r11;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rax *= read_qword(rcx + 0x19);
+            rax *= read<QWORD>(rcx + 0x19);
             rcx = 0x6D3CA144C8E0194F;
             rax *= rcx;
             rcx = 0xE2189F0341B1958B;
@@ -269,7 +279,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         case 6: {
             rbx = (baseModuleAddr + 0xB4E);
             r14 = (baseModuleAddr + 0x16610662);
-            r9 = read_qword(baseModuleAddr + 0x5C5A121);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = rax;
             rcx >>= 0x15;
             rax ^= rcx;
@@ -294,14 +304,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = r11 + 0x1;
             rcx *= r14;
             rax += rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r9;
             rcx = (~rcx);
-            rcx = read_qword(rcx + 0x19);
+            rcx = read<QWORD>(rcx + 0x19);
             rcx *= 0xDC2DB627D9887CF1;
             rax *= rcx;
             return rax;
@@ -309,7 +319,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         }
 
         case 7: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rbx = (baseModuleAddr + 0xB4E);
             rcx = rax;
             rcx >>= 0x26;
@@ -331,14 +341,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax ^= rcx;
             rcx = 0x96A3856562FB6B0E;
             rax ^= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rax *= read_qword(rcx + 0x19);
+            rax *= read<QWORD>(rcx + 0x19);
             rcx = 0xAEE1F5679ADB4BD7;
             rax *= rcx;
             rcx = rax;
@@ -356,7 +366,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         case 8: {
             rbx = (baseModuleAddr + 0xB4E);
-            r9 = read_qword(baseModuleAddr + 0x5C5A121);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = rax;
             rcx >>= 0x1F;
             rax ^= rcx;
@@ -368,14 +378,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = rax;
             rcx >>= 0x20;
             rax ^= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r9;
             rcx = (~rcx);
-            rcx = read_qword(rcx + 0x19);
+            rcx = read<QWORD>(rcx + 0x19);
             rax *= rcx;
             rcx = 0x2C58D03E65DBC973;
             rax *= rcx;
@@ -391,7 +401,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         case 9: {
             rbx = (baseModuleAddr + 0xB4E);
             r15 = (baseModuleAddr + 0x3A23AC81);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = rax;
             rcx >>= 0x23;
             rax ^= rcx;
@@ -402,7 +412,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax -= rcx;
             rcx = 0x9F11BDA0B31163A1;
             rax *= rcx;
-//            rdx = read_qword(rbp + 0xf8);
+//            rdx = read<QWORD>(rbp + 0xf8);
 //            rdx -= rbx;
 //            rdx &= 0xffffffffc0000000;
             rdx = 0;
@@ -411,7 +421,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rdx ^= r10;
             rcx ^= rax;
             rdx = (~rdx);
-            rax = read_qword(rdx + 0x19);
+            rax = read<QWORD>(rdx + 0x19);
             rax *= rcx;
             rcx = 0x9581FD4BB02282FC;
             rax += rcx;
@@ -424,7 +434,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         case 10: {
             rbx = (baseModuleAddr + 0xB4E);
             r15 = (baseModuleAddr + 0x39DFECD6);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = r11;
             rcx *= r15;
             rax -= rcx;
@@ -444,14 +454,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax ^= rcx;
             rcx = 0x2DE793EC9F63ECCA;
             rax -= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rcx = read_qword(rcx + 0x19);
+            rcx = read<QWORD>(rcx + 0x19);
             rax *= rcx;
             rcx = 0x95595DB74CDD1E73;
             rax *= rcx;
@@ -462,18 +472,18 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         }
 
         case 11: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rbx = (baseModuleAddr + 0xB4E);
             r15 = (baseModuleAddr + 0x3D81);
             rax -= r11;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rdx = read_qword(rcx + 0x19);
+            rdx = read<QWORD>(rcx + 0x19);
             rcx = r11;
             rdx *= rax;
             rax = r15;
@@ -498,7 +508,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         case 12: {
             rbx = (baseModuleAddr + 0xB4E);
             r15 = (baseModuleAddr + 0x7BC74523);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rdx = (baseModuleAddr + 0x6C0D6474);
             rcx = baseModuleAddr;
             rcx += 0x96EE;
@@ -518,14 +528,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rax -= rcx;
             rcx = 0xAC21E3686611AE00;
             rax ^= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rcx = read_qword(rcx + 0x19);
+            rcx = read<QWORD>(rcx + 0x19);
             rcx *= 0xD0D4E21D12B341CD;
             rax *= rcx;
             rcx = 0x7F8AD31BCC9F69A;
@@ -536,7 +546,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         case 13: {
             rbx = (baseModuleAddr + 0xB4E);
-            r9 = read_qword(baseModuleAddr + 0x5C5A121);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = 0x85ADB6C74D90A65;
             rax ^= rcx;
             rcx = baseModuleAddr;
@@ -562,14 +572,14 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = rax;
             rcx >>= 0x3C;
             rax ^= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r9;
             rcx = (~rcx);
-            rax *= read_qword(rcx + 0x19);
+            rax *= read<QWORD>(rcx + 0x19);
             rcx = baseModuleAddr;
             rax += rcx;
             return rax;
@@ -578,20 +588,20 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
 
         case 14: {
             rbx = (baseModuleAddr + 0xB4E);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
             rcx = r11;
             rcx *= 0x7FF848674351;
             rax += rcx;
             rcx = 0x32C02A0B0C8367DF;
             rax -= rcx;
-//            rcx = read_qword(rbp + 0xf8);
+//            rcx = read<QWORD>(rbp + 0xf8);
 //            rcx -= rbx;
 //            rcx &= 0xffffffffc0000000;
             rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            rax *= read_qword(rcx + 0x19);
+            rax *= read<QWORD>(rcx + 0x19);
             rcx = rax;
             rcx >>= 0x21;
             rax ^= rcx;
@@ -611,8 +621,8 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
         case 15: {
             rbx = (baseModuleAddr + 0xB4E);
             r14 = (baseModuleAddr + 0x62F2C5B2);
-            r10 = read_qword(baseModuleAddr + 0x5C5A121);
-//            rdx = read_qword(rbp + 0xf8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A121);
+//            rdx = read<QWORD>(rbp + 0xf8);
             rax -= r11;
 //            rdx -= rbx;
 //            rdx &= 0xffffffffc0000000;
@@ -621,7 +631,7 @@ auto decrypt_client_base(uint64_t encrypted_address, uint64_t game_base_address,
             rcx = r14 + rax * 1;
             rdx ^= r10;
             rdx = (~rdx);
-            rax = read_qword(rdx + 0x19);
+            rax = read<QWORD>(rdx + 0x19);
             rax *= rcx;
             rax += r11;
             rcx = rax;
@@ -668,7 +678,7 @@ decrypt_bone_base(uint64_t encrypted_address, uint64_t game_base_address, uint64
     switch (enc_case) {
         case 0: {
             rbx = 0xA5D6FA6FC6D397EA;
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rdi = (baseModuleAddr + 0x125);
             r8 ^= rbx;
             rax = (baseModuleAddr + 0x432CA097);
@@ -679,7 +689,7 @@ decrypt_bone_base(uint64_t encrypted_address, uint64_t game_base_address, uint64
             rax = r8;
             rax >>= 0x1E;
             r8 ^= rax;
-//            rcx = read_qword(rbp + 0x78);
+//            rcx = read<QWORD>(rbp + 0x78);
 //            rcx -= rdi;
 //            rcx &= 0xffffffffc0000000;
             rax = r8;
@@ -689,7 +699,7 @@ decrypt_bone_base(uint64_t encrypted_address, uint64_t game_base_address, uint64
             rcx ^= r10;
             rax ^= r8;
             rcx = (~rcx);
-            r8 = read_qword(rcx + 0x7);
+            r8 = read<QWORD>(rcx + 0x7);
             r8 *= rax;
             rax = 0xCC9FA0CE0E35512B;
             rax *= r8;
@@ -711,16 +721,16 @@ decrypt_bone_base(uint64_t encrypted_address, uint64_t game_base_address, uint64
 
         case 1: {
             rdi = (baseModuleAddr + 0x125);
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             r8 -= rbx;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r10;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             r8 ^= rbx;
             rax = r8;
             rax >>= 0xA;
@@ -747,7 +757,7 @@ rax=0;
         }
 
         case 2: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rdi = (baseModuleAddr + 0x125);
             rax = (baseModuleAddr + 0x4737875B);
             r8 += rax;
@@ -769,14 +779,14 @@ rax=0;
             r8 ^= rax;
             rax = 0x65B0F82E119FD3D0;
             r8 ^= rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r10;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             rax = 0x71CAF2496F010833;
             r8 -= rax;
             return r8;
@@ -785,19 +795,19 @@ rax=0;
 
         case 3: {
             rdi = (baseModuleAddr + 0x125);
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             r8 *= 0x23D8125EA0B64CD;
             rax = rbx;
-//            rcx = read_qword(rbp + 0x78);
+//            rcx = read<QWORD>(rbp + 0x78);
             rax *= 0x7FF65FCA6B56;
 //            rcx -= rdi;
 //            rcx &= 0xffffffffc0000000;
-rcx=0;
+            rcx = 0;
             rax ^= r8;
             rcx <<= 0x10;
             rcx ^= r10;
             rcx = (~rcx);
-            r8 = read_qword(rcx + 0x7);
+            r8 = read<QWORD>(rcx + 0x7);
             r8 *= rax;
             rax = 0x5A2478E907BD6DAB;
             r8 -= rax;
@@ -834,7 +844,7 @@ rcx=0;
 
         case 4: {
             rdi = (baseModuleAddr + 0x125);
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = (baseModuleAddr + 0x86BE);
             rax = (~rax);
             rax -= rbx;
@@ -864,21 +874,21 @@ rcx=0;
             r8 ^= rax;
             rax = 0xCF5620578B65CBB7;
             r8 ^= rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r10;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             return r8;
             break;
         }
 
         case 5: {
             rdi = (baseModuleAddr + 0x125);
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = 0x45E18ABD94081706;
             r8 += rax;
             rax = r8;
@@ -896,10 +906,10 @@ rax=0;
             rax = r8;
             rax >>= 0x9;
             r8 ^= rax;
-//            rcx = read_qword(rbp + 0x78);
+//            rcx = read<QWORD>(rbp + 0x78);
 //            rcx -= rdi;
 //            rcx &= 0xffffffffc0000000;
-rcx=0;
+            rcx = 0;
             rax = r8;
             rax >>= 0x12;
             r8 ^= rax;
@@ -909,7 +919,7 @@ rcx=0;
             rax = r8;
             rax >>= 0x24;
             rax ^= r8;
-            r8 = read_qword(rcx + 0x7);
+            r8 = read<QWORD>(rcx + 0x7);
             r8 *= rax;
             rax = 0x8E2D92BE2C4874E9;
             r8 *= rax;
@@ -921,21 +931,21 @@ rcx=0;
 
         case 6: {
             rdi = (baseModuleAddr + 0x125);
-            r9 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = baseModuleAddr;
             r8 ^= rax;
             r8 -= rbx;
             r8 ^= rbx;
             rax = 0x97886542CA363D19;
             r8 *= rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r9;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             rax = 0x7C11257D56B3AE81;
             r8 ^= rax;
             rax = 0x418101B0441EAE5B;
@@ -952,7 +962,7 @@ rax=0;
 
         case 7: {
             rdi = (baseModuleAddr + 0x125);
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = r8;
             rax >>= 0x18;
             r8 ^= rax;
@@ -969,16 +979,16 @@ rax=0;
             rax = r8;
             rax >>= 0x28;
             r8 ^= rax;
-//            rcx = read_qword(rbp + 0x78);
+//            rcx = read<QWORD>(rbp + 0x78);
 //            rcx -= rdi;
 //            rcx &= 0xffffffffc0000000;
-rcx=0;
+            rcx = 0;
             rax = rbx;
             rcx <<= 0x10;
             rax = (~rax);
             rcx ^= r10;
             rcx = (~rcx);
-            rcx = read_qword(rcx + 0x7);
+            rcx = read<QWORD>(rcx + 0x7);
             rcx *= r8;
             r8 = (baseModuleAddr + 0x31B2B997);
             r8 ^= rax;
@@ -996,18 +1006,18 @@ rcx=0;
 
         case 8: {
             rdi = (baseModuleAddr + 0x125);
-            r9 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = 0xFFFFFFFFC0CEB1E2;
             rax -= rbx;
             r8 += rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r9;
             rax = (~rax);
-            rax = read_qword(rax + 0x7);
+            rax = read<QWORD>(rax + 0x7);
             rax *= 0xFDB56606FB71B80B;
             r8 *= rax;
             rax = r8;
@@ -1026,15 +1036,15 @@ rcx=0;
 
         case 9: {
             rdi = (baseModuleAddr + 0x125);
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
-//            rax = read_qword(rbp + 0x78);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r10;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             rax = r8;
             rax >>= 0x10;
             r8 ^= rax;
@@ -1063,17 +1073,17 @@ rcx=0;
         }
 
         case 10: {
-            r11 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r11 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rdi = (baseModuleAddr + 0x125);
             rdx = (baseModuleAddr + 0x8304);
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r11;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             rcx = rbx;
             rcx = (~rcx);
             rax = (baseModuleAddr + 0x5220);
@@ -1102,15 +1112,15 @@ rcx=0;
 
         case 11: {
             rdi = (baseModuleAddr + 0x125);
-            r9 = read_qword(baseModuleAddr + 0x5C5A1E8);
-//            rax = read_qword(rbp + 0x78);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r9;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             rax = 0xFFFFFFFFFFFF430E;
             r8 += rax;
             rax = r8;
@@ -1131,12 +1141,12 @@ rcx=0;
 
         case 12: {
             rbx = 0x4F7068D3729F37D3;
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rdi = (baseModuleAddr + 0x125);
-//            rcx = read_qword(rbp + 0x78);
+//            rcx = read<QWORD>(rbp + 0x78);
 //            rcx -= rdi;
 //            rcx &= 0xffffffffc0000000;
-            rcx=0;
+            rcx = 0;
             rcx <<= 0x10;
             rcx ^= r10;
             rax = rbx;
@@ -1145,7 +1155,7 @@ rcx=0;
             rax ^= r8;
             r8 = (baseModuleAddr + 0x222E);
             rax ^= r8;
-            r8 = read_qword(rcx + 0x7);
+            r8 = read<QWORD>(rcx + 0x7);
             r8 *= rax;
             rax = baseModuleAddr;
             r8 -= rax;
@@ -1170,7 +1180,7 @@ rcx=0;
 
         case 13: {
             rdi = (baseModuleAddr + 0x125);
-            r9 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = r8;
             rax >>= 0xB;
             r8 ^= rax;
@@ -1203,14 +1213,14 @@ rcx=0;
             rax = r8;
             rax >>= 0x26;
             r8 ^= rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r9;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             return r8;
             break;
         }
@@ -1218,7 +1228,7 @@ rcx=0;
         case 14: {
             rdi = (baseModuleAddr + 0x125);
             r11 = (baseModuleAddr + 0x82D2);
-            r9 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r9 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rax = baseModuleAddr;
             r8 ^= rax;
             rax = 0xC8A8124C0418124F;
@@ -1232,14 +1242,14 @@ rcx=0;
             r8 += rax;
             rax = 0xC8CB23E7D6644921;
             r8 *= rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r9;
             rax = (~rax);
-            rax = read_qword(rax + 0x7);
+            rax = read<QWORD>(rax + 0x7);
             r8 *= rax;
             rax = 0x28025DABC97ACDB6;
             r8 += rax;
@@ -1248,7 +1258,7 @@ rcx=0;
         }
 
         case 15: {
-            r10 = read_qword(baseModuleAddr + 0x5C5A1E8);
+            r10 = read<QWORD>(baseModuleAddr + 0x5C5A1E8);
             rdi = (baseModuleAddr + 0x125);
             r12 = (baseModuleAddr + 0x49D04898);
             rax = r8;
@@ -1263,14 +1273,14 @@ rcx=0;
             rax = r8;
             rax >>= 0x30;
             r8 ^= rax;
-//            rax = read_qword(rbp + 0x78);
+//            rax = read<QWORD>(rbp + 0x78);
 //            rax -= rdi;
 //            rax &= 0xffffffffc0000000;
-            rax=0;
+            rax = 0;
             rax <<= 0x10;
             rax ^= r10;
             rax = (~rax);
-            r8 *= read_qword(rax + 0x7);
+            r8 *= read<QWORD>(rax + 0x7);
             rax = r8;
             rax >>= 0x18;
             r8 ^= rax;
@@ -1297,6 +1307,60 @@ rcx=0;
     return 0;
 }
 
-auto get_bone_index(uint64_t index) -> uint64_t {
-    return 0;
+auto get_bone_index(uint64_t index, uint64_t game_base_address) -> uint64_t {
+    uint64_t RAX = 0, RBX = 0, RCX = 0, RDX = 0, R8 = 0, RDI = 0, R9 = 0, R10 = 0, R11 = 0, R12 = 0, R13 = 0, R14 = 0, RSI = 0, RSP = 0, RBP = 0;
+
+    RBX = index;
+    RCX = RBX * 0x13C8;
+    RAX = 0xE16108FF1793EEB9;
+    R11 = game_base_address;
+    RAX = _umul128(RAX, RCX, &RDX);
+    R10 = 0x8A63AB88AA8DD5E7;
+    RDX >>= 0xD;
+    RAX = RDX * 0x2459;
+    RCX -= RAX;
+    RAX = 0xBB4776D52876E0DD;
+    R8 = RCX * 0x2459;
+    RAX = _umul128(RAX, R8, &RDX);
+    RDX >>= 0xD;
+    RAX = RDX * 0x2BBE;
+    R8 -= RAX;
+    RAX = 0x889ABF4CB4E4EB53;
+    RAX = _umul128(RAX, R8, &RDX);
+    RAX = 0xCCCCCCCCCCCCCCCD;
+    RDX >>= 0xA;
+    RCX = RDX * 0x77F;
+    RAX = _umul128(RAX, R8, &RDX);
+    RDX >>= 0x3;
+    RCX += RDX;
+    RAX = RCX + RCX * 0x4;
+    RAX <<= 0x2;
+    RCX = R8 * 0x16;
+    RCX -= RAX;
+    RAX = read<uint16_t>(RCX + R11 + 0x5C5FB60);
+    R8 = RAX * 0x13C8;
+    RAX = R10;
+    RAX = _umul128(RAX, R8, &RDX);
+    RAX = R10;
+    RDX >>= 0xC;
+    RCX = RDX * 0x1D99;
+    R8 -= RCX;
+    R9 = R8 * 0x2B81;
+    RAX = _umul128(RAX, R9, &RDX);
+    RDX >>= 0xC;
+    RAX = RDX * 0x1D99;
+    R9 -= RAX;
+    RAX = 0xBFA02FE80BFA02FF;
+    RAX = _umul128(RAX, R9, &RDX);
+    RAX = 0xFC0FC0FC0FC0FC1;
+    RDX >>= 0x7;
+    RCX = RDX * 0xAB;
+    RAX = _umul128(RAX, R9, &RDX);
+    RDX >>= 0x2;
+    RCX += RDX;
+    RAX = RCX * 0x82;
+    RCX = R9 * 0x84;
+    RCX -= RAX;
+    RSI = read<uint16_t>(RCX + R11 + 0x5C69150);
+    return RSI;
 }

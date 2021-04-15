@@ -5,11 +5,13 @@ use std::num::Wrapping;
 
 use super::offsets;
 use crate::sdk::structs::{RefDef};
+use std::ptr::copy;
+use std::ffi::c_void;
 
 #[cxx::bridge]
 mod ffi {
     extern "Rust" {
-        fn read_qword(address: u64) -> u64;
+        fn interop_read_bytes(address: u64, size: u64, buf: usize);
     }
 
     extern "C++" {
@@ -18,18 +20,20 @@ mod ffi {
         pub fn decrypt_client_info(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
         pub fn decrypt_client_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
         pub fn decrypt_bone_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
-        pub fn get_bone_index(index: u64) -> u64;
+        pub fn get_bone_index(index: u64, game_base_address: u64) -> u64;
     }
 }
 
-fn read_qword(address: u64) -> u64 {
-    match memlib::memory::try_read_memory(address) {
-        Ok(value) => value,
+fn interop_read_bytes(address: u64, size: u64, buf: usize) {
+    let buf = buf as *mut c_void;
+    match memlib::memory::read_bytes(address, size as _) {
+        Ok(value) => unsafe {
+            copy(value.as_ptr(), buf as *mut u8, size as _);
+        }
         Err(e) => {
             error!("Error reading memory in C++ encryption code: {:?}", e);
-            0
         }
-    }
+    };
 }
 
 #[repr(C)]
@@ -132,6 +136,10 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
 
     trace!("Found decrypted bone_base address: 0x{:X}", decrypted_address);
     Ok(decrypted_address)
+}
+
+pub fn get_bone_index(index: u64, game_base_address: Address) -> u64 {
+    unsafe { ffi::get_bone_index(index, game_base_address) }
 }
 
 fn get_peb() -> u64 {

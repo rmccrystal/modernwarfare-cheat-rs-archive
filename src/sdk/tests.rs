@@ -104,7 +104,9 @@ fn character_names() {
 fn get_bone_pos() {
     let game = get_game!();
 
-    game.get_local_player().unwrap().get_bone_position(&game, bone::Bone::Head).unwrap();
+    let local_player = game.get_local_player().unwrap();
+    let bone_pos = local_player.get_bone_position(&game, bone::Bone::Head).unwrap();
+    assert!(units_to_m((bone_pos - local_player.origin).length()) < 5.0);
 }
 
 #[test]
