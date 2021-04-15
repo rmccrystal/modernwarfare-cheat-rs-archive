@@ -18,6 +18,7 @@ mod ffi {
         pub fn decrypt_client_info(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
         pub fn decrypt_client_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
         pub fn decrypt_bone_base(encrypted_address: u64, game_base_address: u64, last_key: u64, peb: u64) -> u64;
+        pub fn get_bone_index(index: u64) -> u64;
     }
 }
 
@@ -105,11 +106,7 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     }
     trace!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
 
-    // let last_key = get_last_key_byteswap(game_base_address, offsets::client_base::BASE_REVERSED_ADDR, offsets::client_base::BASE_DISPLACEMENT)?;
-    // we don't need it, the cpp interop reads mem
-    let last_key = 0;
-
-    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, last_key, get_peb()) };
+    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, 0, get_peb()) };
 
     if read_bytes(decrypted_address, 1).is_err() {
         bail!("Decrypted client base was invalid: 0x{:X}", decrypted_address);
@@ -127,9 +124,11 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     }
     trace!("Found encrypted bone_base address: 0x{:X}", encrypted_address);
 
-    let last_key = get_last_key(game_base_address, offsets::bones::REVERSED_ADDRESS, offsets::bones::DISPLACEMENT)?;
+    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, 0, get_peb()) };
 
-    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, last_key, get_peb()) };
+    if read_bytes(decrypted_address, 1).is_err() {
+        bail!("Decrypted bone base was invalid: 0x{:X}", decrypted_address);
+    }
 
     trace!("Found decrypted bone_base address: 0x{:X}", decrypted_address);
     Ok(decrypted_address)

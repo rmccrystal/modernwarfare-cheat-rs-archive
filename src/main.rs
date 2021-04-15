@@ -56,7 +56,7 @@ fn main() {
         }
         Err(err) => {
             error!("{}", err);
-            msgbox::create("Cryptx Error", &err.to_string(), IconType::Error);
+            msgbox::create("Error", &err.to_string(), IconType::Error);
             1
         }
     })
@@ -66,6 +66,14 @@ fn main() {
 fn find_cod_window(cod_pid: u32) -> Option<HWND> {
     get_windows().into_iter()
         .filter(|window| window.pid == cod_pid)
-        .find(|window| window.class_bytes.starts_with(&[73, 63, 87, 63, 56]))
-        .map(|window| window.hwnd)
+        .filter(|window| {
+            if let Some(title) = &window.title {
+                if title == "MSCTFIME UI" || title == "IME" {
+                    return false;
+                }
+            }
+            true
+        })
+        .map(|w| w.hwnd)
+        .next()
 }

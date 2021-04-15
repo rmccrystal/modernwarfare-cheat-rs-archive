@@ -11,8 +11,6 @@ pub const NAME_LIST_OFFSET: Address = 0x4C70;
 pub const CAMERA_POINTER: Address = 0x13A04E40;
 pub const CAMERA_OFFSET: Address = 0x1D8;
 
-pub const INDEX_ARRAY: Address = 0x4D58F90;
-
 pub const LOCAL_INDEX_POINTER: Address = 0x28ED8;
 pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
@@ -58,10 +56,9 @@ pub mod client_base {
 pub mod bones {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x121F7548;
-    pub const REVERSED_ADDRESS: Address = 0x4D471DF;
-    pub const DISPLACEMENT: Address = 0xD;
-    pub const BASE_POS: Address = 0x6D2E4;
+    pub const ENCRYPTED_PTR: Address = 0x14A89A98;
+    pub const BASE_POS: Address = 0x1F86C;
+    pub const INDEX_ARRAY: Address = 0x4D58F90;
     pub const INDEX_STRUCT_SIZE: usize = 0x150;
 }
 

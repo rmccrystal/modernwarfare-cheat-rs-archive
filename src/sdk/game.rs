@@ -51,7 +51,10 @@ impl Game {
             .base_address;
 
         let mut game = Self {
-            addresses: GameAddresses::new(base_address),
+            addresses: GameAddresses{
+                game_base_address: base_address,
+                ..Default::default()
+            },
             address_update_frequency: Duration::from_secs(1),
             last_update: Instant::now().sub(Duration::from_secs(10)),
         };
@@ -254,7 +257,6 @@ impl GameAddresses {
     }
 
     fn get_bone_base(&self) -> Option<Address> {
-        return None;
         let bone_base = encryption::get_bone_base_address(self.game_base_address);
         if let Err(error) = &bone_base {
             warn!("Failed to find bone_base address with error: {}", error)

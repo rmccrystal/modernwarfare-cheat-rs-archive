@@ -39,6 +39,8 @@ pub enum Bone {
 }
 
 use Bone::*;
+use std::mem::size_of;
+
 // Bone connections for a skeleton ESP
 pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
     (Head, Neck),
@@ -71,7 +73,7 @@ pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
 pub fn get_bone_position(addresses: &GameAddresses, entity_num: i32, bone_index: u32) -> Result<Vector3> {
     let bone_base = addresses.bone_base.ok_or(anyhow!("Could not find bone_base"))?;
 
-    let bone_ptr_index: u16 = read_memory(addresses.game_base_address + offsets::INDEX_ARRAY + (entity_num as u64 * std::mem::size_of::<u16>() as u64));
+    let bone_ptr_index: u16 = read_memory(addresses.game_base_address + offsets::bones::INDEX_ARRAY + (entity_num as u64 * size_of::<u16>() as u64));
     trace!("bone_ptr_index: 0x{:X}", bone_ptr_index);
 
     let bone_ptr: Address = read_memory(bone_base + (bone_ptr_index as u64 * offsets::bones::INDEX_STRUCT_SIZE as u64) + 0xC0);

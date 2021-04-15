@@ -112,6 +112,7 @@ pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>, window: Window
                 new_state.config = config;
             }
         }, |overlay| {
+            let start = Instant::now();
             let CheatState {game, config, aimbot_context} = shared_state.lock().unwrap().clone();
 
             let game_info = match game.get_game_info() {
@@ -123,6 +124,7 @@ pub fn start_overlay_thread(shared_state: Arc<Mutex<CheatState>>, window: Window
 
             esp::esp(&game_info, overlay, &config, &aimbot_context);
             closest_player::closest_player(&game_info, &config, overlay);
+            dbg!(1.0/((start.elapsed().as_micros() as f64) * 1_000_000.0));
         });
     });
 }
