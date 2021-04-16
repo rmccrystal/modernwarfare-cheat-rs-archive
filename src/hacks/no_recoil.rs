@@ -4,76 +4,20 @@ use std::sync::mpsc::{Sender, channel};
 use std::num::Wrapping;
 use std::sync::{Mutex, Arc};
 use log::*;
-use std::sync::atomic::{AtomicI64, Ordering};
 use std::{time, thread};
+use crate::hacks::CONFIG;
 
-// since we're running on a new thread we have to send messages
-#[derive(Clone)]
-pub struct NoRecoilState {
-    pub enabled: bool,
-    pub client_info_base: Option<Address>,
-    pub in_game: bool
-}
-
-impl NoRecoilState {
-    pub fn default() -> Self {
-        Self {
-            enabled: true,
-            client_info_base: None,
-            in_game: false,
-        }
-    }
-}
-
-const NO_RECOIL_THREADS: u32 = 1;
-static WRITE_COUNTER: AtomicI64 = AtomicI64::new(0);
-
-pub fn start_no_recoil_thread() -> Sender<NoRecoilState> {
-    let (send, recv) = channel();
-
-    let mut local_state = NoRecoilState::default();
-
-    // this will be updated by the channel
-    let shared_state: Arc<Mutex<NoRecoilState>> = Arc::new(Mutex::new(local_state.clone()));
-
-    // start no recoil threads
-    for thread in 1..=NO_RECOIL_THREADS {
-        debug!("Starting no recoil thread {}", thread);
-        let state = shared_state.clone();
-        thread::spawn(move || {
-            loop {
-                let state = state.lock().unwrap().clone();
-                if state.client_info_base.is_none() || !state.in_game || !state.enabled {
-                    continue;
-                }
-                no_recoil_tick(state.client_info_base.unwrap());
+pub fn start_no_recoil_thread() {
+    thread::spawn(move || {
+        loop {
+            if !CONFIG.get_ref().no_recoil_enabled {
+                return
             }
-        });
-    }
-
-    // this thread will update the shared state from the channel
-    thread::spawn(move || {
-        loop {
-            // Update the state from thread
-            local_state = match recv.try_recv() {
-                Ok(new_state) => new_state,
-                Err(_) => local_state
-            };
-
-            // update the shared state between threads
-            *shared_state.lock().unwrap() = local_state.clone();
+            if let Some(base) = crate::sdk::globals::CLIENT_INFO.get_clone() {
+                no_recoil_tick(base);
+            }
         }
     });
-
-    thread::spawn(move || {
-        loop {
-            thread::sleep(time::Duration::from_secs(1));
-            trace!("No recoil threads: {} writes / s", WRITE_COUNTER.load(Ordering::SeqCst));
-            let _ = WRITE_COUNTER.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |_| Some(0));
-        }
-    });
-
-    send
 }
 
 fn no_recoil_tick(client_info_base: Address) {
@@ -97,5 +41,4 @@ fn no_recoil_tick(client_info_base: Address) {
     bytes[4..=7].clone_from_slice(&val2.to_ne_bytes());
 
     write_bytes(address, &bytes);
-    WRITE_COUNTER.fetch_add(1, Ordering::SeqCst);
 }

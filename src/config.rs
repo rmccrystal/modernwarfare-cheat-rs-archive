@@ -25,7 +25,7 @@ pub struct Config {
     #[imgui(text_wrap("Util"),
             separator(),
             nested)]
-    pub cloest_player_config: ClosestPlayerConfig,
+    pub closest_player_config: ClosestPlayerConfig,
 
     #[imgui(checkbox(label = "No Recoil"))]
     pub no_recoil_enabled: bool,
@@ -36,7 +36,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             aimbot_config: AimbotConfig::default(),
-            cloest_player_config: ClosestPlayerConfig::default(),
+            closest_player_config: ClosestPlayerConfig::default(),
             esp_config: EspConfig::default(),
             no_recoil_enabled: false,
             friends: vec![]

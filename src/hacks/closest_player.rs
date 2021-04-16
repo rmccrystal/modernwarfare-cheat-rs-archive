@@ -1,5 +1,5 @@
 use crate::sdk::*;
-use crate::sdk::structs::CharacterStance;
+use crate::sdk::CharacterStance;
 use crate::config::{Keybind, Config};
 use log::*;
 use memlib::overlay::{Color, TextStyle, Font, TextOptions, Draw};
@@ -27,13 +27,13 @@ impl ClosestPlayerConfig {
 }
 
 pub fn closest_player(game_info: &GameInfo, global_config: &Config, overlay: &mut impl Draw) {
-    let config = &global_config.cloest_player_config;
+    let config = &global_config.closest_player_config;
     if !config.enabled {
         return;
     }
 
     let players = &game_info.players;
-    let local_player = &game_info.local_player;
+    let local_player = game_info.get_local_player();
 
     let closest_player = players
         .iter()

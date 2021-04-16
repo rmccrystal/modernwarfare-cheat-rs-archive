@@ -5,7 +5,7 @@ use memlib::memory::{read_memory, Address};
 use anyhow::*;
 use log::*;
 use super::{offsets};
-use crate::sdk::{Game, GameAddresses};
+use super::globals;
 use serde::{Serialize, Deserialize};
 
 #[repr(u32)]
@@ -43,6 +43,7 @@ use std::mem::size_of;
 use crate::sdk::encryption::get_bone_index;
 use offsets::bones;
 use bones::INDEX_STRUCT_SIZE;
+use crate::sdk::globals::CLIENT_INFO;
 
 // Bone connections for a skeleton ESP
 pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
@@ -73,11 +74,11 @@ pub static BONE_CONNECTIONS: &[(Bone, Bone)] = &[
 ];
 
 
-pub fn get_bone_position(addresses: &GameAddresses, entity_num: i32, bone: u32) -> Result<Vector3> {
-    let bone_base = addresses.bone_base.ok_or(anyhow!("Could not find bone_base"))?;
+pub fn get_bone_position(entity_num: i32, bone: u32) -> Result<Vector3> {
+    let bone_base = globals::BONE_BASE.get().context("Called get_bone_position without bone_base")?;
 
     // let bone_ptr_index: u16 = read_memory(addresses.game_base_address + offsets::bones::INDEX_ARRAY + (entity_num as u64 * size_of::<u16>() as u64));
-    let bone_index = get_bone_index(entity_num as _, addresses.game_base_address);
+    let bone_index = get_bone_index(entity_num as _, globals::GAME_BASE_ADDRESS.get());
 
     let bone_ptr: Address = read_memory(bone_base + (bone_index * INDEX_STRUCT_SIZE as u64) + 0xC0);
     if bone_ptr == 0 {
@@ -90,7 +91,7 @@ pub fn get_bone_position(addresses: &GameAddresses, entity_num: i32, bone: u32) 
         bail!("Could not find bone_pos");
     }
 
-    let client_info = addresses.client_info_base.ok_or(anyhow!("Could not find client_info_base"))?;
+    let client_info = CLIENT_INFO.get().ok_or(anyhow!("Could not find client_info_base"))?;
     let base_pos: Vector3 = read_memory(client_info + bones::BASE_POS);
 
     Ok(bone_pos + base_pos)

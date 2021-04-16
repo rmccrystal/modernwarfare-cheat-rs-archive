@@ -1,15 +1,20 @@
 #![allow(dead_code)]
 
+use std::collections::HashMap;
+
 use anyhow::*;
-use super::structs::{Name};
-use super::offsets::character_info;
-use memlib::math::{Vector3, Vector2};
-use memlib::memory::{read_memory, Address, dump_memory, try_read_memory};
-use super::{Game, bone};
-use crate::sdk::bone::Bone;
-use crate::sdk::structs::CharacterStance;
 use log::*;
-use crate::sdk::GameInfo;
+use memlib::math::{Vector2, Vector3};
+use memlib::memory::{Address, dump_memory, read_memory, try_read_memory};
+
+use crate::sdk::{GameInfo, world_to_screen};
+use crate::sdk::bone::Bone;
+use crate::sdk::internal::get_name_struct;
+use crate::sdk::structs::CharacterStance;
+
+use super::bone;
+use super::offsets::character_info;
+use super::structs::Name;
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -22,10 +27,11 @@ pub struct Player {
     pub ads: bool,
     pub reloading: bool,
     pub base_address: Address,
+    // pub bones: HashMap<Bone, Vector3> // TODO
 }
 
 impl Player {
-    pub fn new(game: &Game, base_address: Address, index: i32) -> Result<Self> {
+    pub fn new(base_address: Address, index: i32) -> Result<Self> {
         let valid: i32 = try_read_memory(base_address + character_info::VALID).context("Could not read is_valid")?;
         if valid != 1 {
             bail!("Valid was {}", valid);
@@ -60,7 +66,7 @@ impl Player {
         let ads = read_memory::<i32>(base_address + character_info::ADS) == 1;
         let reloading = read_memory::<i32>(base_address + character_info::RELOAD) == 121;
 
-        let name_struct = game.get_name_struct(index as u32);
+        let name_struct = get_name_struct(index as u32);
         if name_struct.health <= 0 {
             bail!("Invalidated player because health was {}", name_struct.health);
         }
@@ -90,11 +96,11 @@ impl Player {
             }
         }
 
-        game_info.local_player.team == self.team
+        game_info.get_local_player().team == self.team
     }
 
-    pub fn get_bone_position(&self, game: &Game, bone: Bone) -> Result<Vector3> {
-        let pos = bone::get_bone_position(&game.addresses, self.id, unsafe { std::mem::transmute(bone) })?;
+    pub fn get_bone_position(&self, bone: Bone) -> Result<Vector3> {
+        let pos = bone::get_bone_position(self.id, unsafe { std::mem::transmute(bone) })?;
         let distance_from_origin = crate::sdk::units_to_m((pos - self.origin).length());
         if distance_from_origin > 2.0 {
             warn!("bone {:?} ({}) {}m away from {}'s origin was read ({:?})", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name, pos);
@@ -103,29 +109,30 @@ impl Player {
         Ok(pos)
     }
 
-    pub fn get_head_position(&self, game: &Game) -> Vector3 {
-        match self.get_bone_position(game, Bone::Head) {
+    pub fn get_head_position(&self) -> Vector3 {
+        match self.get_bone_position(Bone::Head) {
             Ok(pos) => pos,
             Err(err) => {
                 // warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
-                self.assume_head_position()
+                self.estimate_head_position()
             }
         }
     }
 
     /// Gets the bounding box of the player from bottom left to top right
     /// Returns None if world_to_screen fails
-    pub fn get_bounding_box(&self, game: &Game) -> Option<(Vector2, Vector2)> {
-        match self.get_bounding_box_bones(&game) {
+    pub fn get_bounding_box(&self) -> Option<(Vector2, Vector2)> {
+        match self.get_bounding_box_bones() {
             Some(val) => Some(val),
-            None => self.get_boudning_box_fallback(&game)
+            None => self.get_bounding_box_fallback()
         }
     }
 
     /// Gets the player bounding box using bone locations
-    fn get_bounding_box_bones(&self, game: &Game) -> Option<(Vector2, Vector2)> {
+    fn get_bounding_box_bones(&self) -> Option<(Vector2, Vector2)> {
         // THe bones kind of flicker atm, so we will just use fallback
         return None;
+        /*
         let bones = vec![Bone::Head, Bone::Neck, Bone::Chest, Bone::Mid, Bone::Tummy,
                          Bone::RightFoot1, Bone::RightFoot2, Bone::RightFoot3, Bone::RightFoot4,
                          Bone::LeftFoot1, Bone::LeftFoot2, Bone::LeftFoot3, Bone::LeftFoot4,
@@ -138,12 +145,13 @@ impl Player {
         }
 
         Some(memlib::util::get_boudning_box(bone_locations))
+         */
     }
 
-    fn get_boudning_box_fallback(&self, game: &Game) -> Option<(Vector2, Vector2)> {
-        let head_pos = self.get_head_position(&game);
-        let head_pos = game.world_to_screen(&(head_pos + Vector3 { x: 0.0, y: 0.0, z: 10.0 }))?;
-        let feet_pos = game.world_to_screen(&(self.origin))?;
+    fn get_bounding_box_fallback(&self) -> Option<(Vector2, Vector2)> {
+        let head_pos = self.get_head_position();
+        let head_pos = world_to_screen(&(head_pos + Vector3 { x: 0.0, y: 0.0, z: 10.0 }))?;
+        let feet_pos = world_to_screen(&(self.origin))?;
 
         let height = feet_pos.y - head_pos.y;
         let width = match self.stance {
@@ -166,7 +174,7 @@ impl Player {
         ))
     }
 
-    pub fn assume_head_position(&self) -> Vector3 {
+    pub fn estimate_head_position(&self) -> Vector3 {
         let delta_z = match self.stance {
             CharacterStance::Standing => 60.0,
             CharacterStance::Crouching => 40.0,

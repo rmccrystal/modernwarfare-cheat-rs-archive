@@ -3,7 +3,7 @@ use log::*;
 use memlib::{math, system};
 use crate::config::{Keybind, Config};
 use crate::sdk::bone::Bone;
-use crate::sdk::structs::CharacterStance;
+use crate::sdk::CharacterStance;
 use serde::{Serialize, Deserialize};
 use memlib::math::Vector3;
 
@@ -26,9 +26,11 @@ pub struct AimbotConfig {
     // Will lock onto the same player until button stops being pressed
     #[imgui(slider(min = 0.0, max = 2000.0, label = "Aimbot distance limit (m)"))]
     pub distance_limit: f32,
-    // Distance limit in meteres
+    // Distance limit in metres
     #[imgui(checkbox(label = "Aim at downed"))]
     pub aim_at_downed: bool,
+    /// Smooth based on scope
+    pub scale_speed: bool,
 }
 
 impl AimbotConfig {
@@ -43,24 +45,17 @@ impl AimbotConfig {
             aim_lock: true,
             distance_limit: 400.0,
             aim_at_downed: false,
+            scale_speed: true,
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct AimbotContext {
     pub aim_lock_player_id: Option<i32> // The target ID we are aimlocking to
 }
 
-impl AimbotContext {
-    pub fn new() -> Self {
-        Self {
-            aim_lock_player_id: None
-        }
-    }
-}
-
-pub fn aimbot(game_info: &GameInfo, global_config: &Config, ctx: &mut AimbotContext) {
+pub fn aimbot(global_config: &Config, game_info: &GameInfo, ctx: &mut AimbotContext) {
     let config = &global_config.aimbot_config;
 
     if !config.enabled {
@@ -72,19 +67,15 @@ pub fn aimbot(game_info: &GameInfo, global_config: &Config, ctx: &mut AimbotCont
         return;
     }
 
-    let get_head_pos = |player: &Player| {
-        player.get_head_position(&game_info.game)
-    };
-
     // Get target
     let target = {
         if let Some(id) = ctx.aim_lock_player_id {
             match game_info.get_player_by_id(id) {
-                Some(pl) => Some(pl),
-                None => get_target(&game_info, &config, get_head_pos, &global_config.friends)
+                Some(pl) => Some((pl, get_aim_position(&pl, &game_info, &ctx))),
+                None => get_target(&game_info, &config, &ctx, &global_config.friends)
             }
         } else {
-            get_target(&game_info, &config, get_head_pos, &global_config.friends)
+            get_target(&game_info, &config, &ctx, &global_config.friends)
         }
     };
 
@@ -93,87 +84,80 @@ pub fn aimbot(game_info: &GameInfo, global_config: &Config, ctx: &mut AimbotCont
         ctx.aim_lock_player_id = None;
         return;
     }
-    let target = target.unwrap();
-    if target.stance == CharacterStance::Downed {
+
+    let (player, target) = target.unwrap();
+    if player.stance == CharacterStance::Downed {
         ctx.aim_lock_player_id = None;
     }
 
-    ctx.aim_lock_player_id = Some(target.id);
+    ctx.aim_lock_player_id = Some(player.id);
 
     // Aim at target
-    let _ = aim_at(&game_info, &target, &config, get_head_pos);
+    aim_at(&game_info, &player, &target, &config);
 }
 
-/// Returns the target to aim at or None otherwise
-fn get_target<'a, 'g>(game_info: &'a GameInfo, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3, friends: &[String]) -> Option<&'a Player> {
-    let local_player = &game_info.local_player;
-    let mut player_list = game_info.players.clone();
+/// Gets the position to aim at given a player.
+/// This is where prediction should be implemented
+fn get_aim_position(player: &Player, game_info: &GameInfo, ctx: &AimbotContext) -> Vector3 {
+    player.estimate_head_position()
+}
 
-    // Remove local_player
-    player_list.retain(|player| player.id != local_player.id);
+/// Returns the target player and the position to aim at
+fn get_target<'a>(game_info: &'a GameInfo, config: &AimbotConfig, ctx: &AimbotContext, friends: &[String]) -> Option<(&'a Player, Vector3)> {
+    let local_player = game_info.get_local_player();
 
-    let local_view_angles = &game_info.local_view_angles;
-    let local_position = &game_info.local_position;
+    game_info.players.iter().filter_map(|player| {
+        if player.id == local_player.id {
+            return None;
+        }
 
-    game_info.players.iter()
-        .filter(|&player| {
-            let position = get_aim_position(&player);
+        // Ignore downed
+        if !config.aim_at_downed && player.stance == CharacterStance::Downed {
+            return None;
+        }
 
-            if player.id == game_info.local_player.id {
-                return false;
-            }
+        // Check team
+        if !config.teams && player.is_teammate(&game_info, &friends) {
+            return None;
+        }
 
-            // Filter out teammates
-            if !config.teams && player.is_teammate(&game_info, friends) {
-                return false;
-            }
+        // Check distance
+        let distance = units_to_m((player.origin - local_player.origin).length());
+        if distance > config.distance_limit {
+            return None;
+        }
 
-            // Filter out of fov
-            let fov = math::calculate_relative_angles(&local_position, &position, &local_view_angles).length();
-            if fov > config.fov {
-                return false;
-            }
+        // first calculate fov to origin so we don't have to run prediction for every player
+        let fov_to_origin = math::calculate_relative_angles(&game_info.camera_pos, &player.origin, &game_info.local_view_angles).length();
+        if fov_to_origin * 1.5 > config.fov {
+            return None;
+        }
 
+        let aim_position = get_aim_position(&player, &game_info, &ctx);
+        let angle = math::calculate_relative_angles(&aim_position, &player.origin, &game_info.local_view_angles).length();
+        if angle > config.fov {
+            return None;
+        }
 
-            // Filter out players too far away
-            let distance = (position - local_position).length();
-
-            if units_to_m(distance) > config.distance_limit {
-                return false;
-            }
-
-            // Ignore downed
-            if !config.aim_at_downed && player.stance == CharacterStance::Downed {
-                return false;
-            }
-
-            true
-        })
-        .min_by_key(|&player| {
-            let position = get_aim_position(&player);
-
-            let angle = math::calculate_relative_angles(&local_position, &position, &local_view_angles);
-            let distance = (local_position - position).length();
-            let fov = angle.length();
-
+        Some((player, aim_position, angle, distance))
+    })
+        .min_by_key(|(player, aim_position, angle, distance)| {
             // Combine fov and distance
-            (fov + (distance / 100.0) * fov) as i32
+            (angle + (distance / 100.0) * angle) as i32
         })
+        .map(|(player, aim_position, angle, distance)| (player, aim_position))
 }
 
-fn aim_at(game_info: &GameInfo, target: &Player, config: &AimbotConfig, get_aim_position: impl Fn(&Player) -> Vector3) {
-    let target_position = get_aim_position(&target);
-    let local_position = &game_info.local_position;
-    let local_view_angles = &game_info.local_view_angles;
-
-    let delta = math::calculate_relative_angles(&local_position, &target_position, &local_view_angles);
+/// Aims at `target`
+fn aim_at(game_info: &GameInfo, player: &Player, target: &Vector3, config: &AimbotConfig) {
+    let delta = math::calculate_relative_angles(&game_info.camera_pos, &target, &game_info.local_view_angles);
 
     info!("Aiming at {}\t({}m)\t({}°)\t({})\t({:?})",
-           target.name,
-           units_to_m((target_position - local_position).length()),
-           delta.length(),
-           target.health,
-           target.stance
+          player.name,
+          units_to_m((target - game_info.camera_pos).length()),
+          delta.length(),
+          player.health,
+          player.stance
     );
 
     let new_delta = delta / ((config.smooth / 2.0) * crate::CHEAT_TICKRATE as f32);
@@ -182,8 +166,8 @@ fn aim_at(game_info: &GameInfo, target: &Player, config: &AimbotConfig, get_aim_
     let dx = -new_delta.yaw * mouse_multiplier;
     let dy = new_delta.pitch * mouse_multiplier;
 
-    let dx = if dx as i32 == 0 { 1 } else { dx as i32 };
-    let dy = if dy as i32 == 0 { 1 } else { dy as i32 };
+    let dx = dx.ceil() as i32;
+    let dy = dy.ceil() as i32;
 
-    system::move_mouse_relative(dx as i32, dy as i32);
+    system::move_mouse_relative(dx, dy);
 }

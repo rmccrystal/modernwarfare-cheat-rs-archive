@@ -7,6 +7,7 @@ use super::offsets;
 use crate::sdk::structs::{RefDef};
 use std::ptr::copy;
 use std::ffi::c_void;
+use super::globals;
 
 #[cxx::bridge]
 mod ffi {
@@ -37,7 +38,7 @@ fn interop_read_bytes(address: u64, size: u64, buf: usize) {
 }
 
 #[repr(C)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct RefdefKeyStruct {
     pub ref0: u32,
     pub ref1: u32,
@@ -47,7 +48,7 @@ pub struct RefdefKeyStruct {
 pub fn get_refdef_pointer(game_base_address: Address) -> Result<Pointer<RefDef>> {
     let crypt: RefdefKeyStruct = try_read_memory(game_base_address + offsets::REFDEF as u64)?;
 
-    if crypt.ref0 == 0 && crypt.ref1 == 0 && crypt.ref2 == 0 {
+    if crypt == RefdefKeyStruct::default() {
         bail!("Read 0 for refdef key struct");
     }
     trace!("Found refdef_key_struct: {:?}", crypt);
@@ -70,31 +71,27 @@ pub fn get_refdef_pointer(game_base_address: Address) -> Result<Pointer<RefDef>>
     Ok(ref_def_pointer)
 }
 
+fn sanitize_decrypted_address(address: Address) -> Result<Address> {
+    if address > 0xFFFFFFFFFFFFFF {
+        bail!("Address was too large");
+    }
+    if read_bytes(address, 1).is_err() {
+        bail!("Could not read address: {:X}", address);
+    }
+
+    Ok(address)
+}
+
 pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
-    // Get the encrypted base address
     let encrypted_address: Address = read_memory(game_base_address + offsets::client_info::ENCRYPTED_PTR);
     if encrypted_address == 0 {
         bail!("Could not find encrypted base address for client_info");
     }
     trace!("Found encrypted client_info address: 0x{:X}", encrypted_address);
 
-    // Get last_key
+    let decrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, 0, globals::PEB.get()) };
 
-    // let last_key = get_last_key_byteswap(game_base_address, offsets::client_info::REVERSED_ADDRESS, offsets::client_info::DISPLACEMENT)?;
-    // let last_key = 0;
-
-    // trace!("Found client_info last_key: 0x{:X}", last_key);
-
-    let decrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, 0, get_peb()) };
-
-    if decrypted_address > 0xFFFFFFFFFFFFFF {
-        trace!("Invalidated client_info because the address was too large: 0x{:X}", decrypted_address);
-        bail!("Address was too large");
-    }
-
-    if read_bytes(decrypted_address, 1).is_err() {
-        bail!("Decrypted client info address was invalid: {:X}", decrypted_address);
-    }
+    sanitize_decrypted_address(decrypted_address)?;
 
     trace!("Found decrypted client_info address: 0x{:X}", decrypted_address);
 
@@ -110,11 +107,9 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     }
     trace!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
 
-    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, 0, get_peb()) };
+    let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, 0, globals::PEB.get()) };
 
-    if read_bytes(decrypted_address, 1).is_err() {
-        bail!("Decrypted client base was invalid: 0x{:X}", decrypted_address);
-    }
+    sanitize_decrypted_address(decrypted_address)?;
 
     trace!("Found decrypted client_info_base address: 0x{:X}", decrypted_address);
 
@@ -128,11 +123,9 @@ pub fn get_bone_base_address(game_base_address: Address) -> Result<Address> {
     }
     trace!("Found encrypted bone_base address: 0x{:X}", encrypted_address);
 
-    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, 0, get_peb()) };
+    let decrypted_address = unsafe { ffi::decrypt_bone_base(encrypted_address, game_base_address, 0, globals::PEB.get()) };
 
-    if read_bytes(decrypted_address, 1).is_err() {
-        bail!("Decrypted bone base was invalid: 0x{:X}", decrypted_address);
-    }
+    sanitize_decrypted_address(decrypted_address)?;
 
     trace!("Found decrypted bone_base address: 0x{:X}", decrypted_address);
     Ok(decrypted_address)
@@ -142,30 +135,42 @@ pub fn get_bone_index(index: u64, game_base_address: Address) -> u64 {
     unsafe { ffi::get_bone_index(index, game_base_address) }
 }
 
-fn get_peb() -> u64 {
-    let peb = get_process_info().peb_base_address;
-    trace!("peb: {:#X}", peb);
-    peb
-}
+#[cfg(test)]
+mod tests {
+    use super::super::globals;
+    use super::*;
+    use std::sync::Once;
+    use memlib::logger::MinimalLogger;
 
-fn get_last_key(game_base_address: Address, reversed_address_offset: Address, displacement_offset: Address) -> Result<Address> {
-    let reversed_address: Address = try_read_memory(game_base_address + reversed_address_offset)?;
-    let last_key = try_read_memory(!reversed_address + displacement_offset)?;
+    static INIT: Once = Once::new();
 
-    if last_key == 0 {
-        bail!("last_key was 0");
+    pub fn init() {
+        INIT.call_once(|| {
+            let _ = MinimalLogger::init(LevelFilter::Trace);
+            let handle = Handle::new(crate::PROCESS_NAME).unwrap();
+            crate::sdk::init(handle).unwrap();
+        })
     }
 
-    Ok(last_key)
-}
-
-fn get_last_key_byteswap(game_base_address: Address, reversed_address_offset: Address, displacement_offset: Address) -> Result<Address> {
-    let reversed_address: Address = try_read_memory(game_base_address + reversed_address_offset).unwrap();
-    let last_key = try_read_memory(u64::from_be(reversed_address) + displacement_offset).unwrap();
-
-    if last_key == 0 {
-        bail!("last_key was 0");
+    #[test]
+    fn client_info() {
+        init();
+        let client_info = get_client_info_address(globals::GAME_BASE_ADDRESS.get()).unwrap();
+        info!("client_info: {:X}", client_info)
     }
 
-    Ok(last_key)
+    #[test]
+    fn client_base() {
+        init();
+        let client_info = get_client_info_address(globals::GAME_BASE_ADDRESS.get()).unwrap();
+        let client_base = get_client_base_address(globals::GAME_BASE_ADDRESS.get(), client_info).unwrap();
+        info!("client_base: {:X}", client_base)
+    }
+
+    #[test]
+    fn bone_base() {
+        init();
+        let bone_base = get_bone_base_address(globals::GAME_BASE_ADDRESS.get()).unwrap();
+        info!("bone_base: {:X}", bone_base);
+    }
 }

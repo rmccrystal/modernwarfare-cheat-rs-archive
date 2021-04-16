@@ -8,63 +8,29 @@ use memlib::memory;
 use super::encryption;
 use crate::sdk::*;
 use std::borrow::Borrow;
+use memlib::memory::Handle;
+use crate::sdk::internal::{get_players, get_camera_angles, get_camera_position, get_local_index, get_player_by_index};
+use bone::Bone;
+use crate::sdk::globals::update_addresses;
 
-lazy_static::lazy_static! {
-    static ref GAME: Game = {
-        // Initialize the logger
-        let _ = MinimalLogger::init(LevelFilter::Trace);
+static INIT: Once = Once::new();
 
-        let handle = memory::Handle::from_boxed_interface(Box::new(
-            memory::handle_interfaces::driver_handle::DriverProcessHandle::attach(crate::PROCESS_NAME).expect("Failed to create a handle to MW")
-        ));
-
-        let mut game = Game::new(handle).unwrap();
-
-        game.update_addresses();
-
-        game
-    };
-}
-
-macro_rules! get_game {
-    () => { &GAME };
-}
-
-#[test]
-fn decrypt_client_info() {
-    let game = get_game!();
-    let base_address = game.addresses.game_base_address;
-    let _client_info = encryption::get_client_info_address(base_address).unwrap();
-}
-
-#[test]
-fn decrypt_client_base() {
-    let game = get_game!();
-
-    let base_address = game.addresses.game_base_address;
-
-    let client_info = encryption::get_client_info_address(base_address).unwrap();
-    let _client_base = encryption::get_client_base_address(base_address, client_info).unwrap();
-}
-
-#[test]
-fn decrypt_bone_base() {
-    let game = get_game!();
-
-    let base_address = game.addresses.game_base_address;
-
-    let _bone_base = encryption::get_bone_base_address(base_address).unwrap();
+pub fn init() {
+    INIT.call_once(|| {
+        MinimalLogger::init(LevelFilter::Trace);
+        let handle = Handle::new(crate::PROCESS_NAME).unwrap();
+        super::init(handle).unwrap();
+        update_addresses();
+        assert!(globals::CLIENT_INFO.get().is_some());
+    })
 }
 
 // must be in game
 #[test]
 fn players() {
-    let game = get_game!();
+    init();
 
-    let players = game.get_players();
-
-    let players = players.expect("No players were found");
-
+    let players = get_players().expect("players returned None");
     assert!(!players.is_empty());
 
     info!("Players: {:?}", players);
@@ -72,25 +38,26 @@ fn players() {
 
 #[test]
 fn camera() {
-    let game = get_game!();
+    init();
 
-    dbg!(game.get_camera_position().unwrap());
-    dbg!(game.get_camera_angles().unwrap());
+    get_camera_angles().unwrap();
+    get_camera_position().unwrap();
 }
 
 #[test]
 fn get_local_player() {
-    let game = get_game!();
+    init();
 
-    assert_eq!(game.get_local_player().unwrap().name, "draven");
+    let p = internal::get_local_player().unwrap();
+    assert!(p.name == "draven");
 }
 
 #[test]
 fn character_names() {
-    let game = get_game!();
+    init();
 
-    trace!("{:?}", game.get_players().unwrap());
-    for player in &game.get_players().unwrap() {
+    let players = get_players().unwrap();
+    for player in players {
         trace!("Found player {:?}", player);
         if !player.name.is_empty() {
             return;
@@ -102,16 +69,9 @@ fn character_names() {
 
 #[test]
 fn get_bone_pos() {
-    let game = get_game!();
+    init();
 
-    let local_player = game.get_local_player().unwrap();
-    let bone_pos = local_player.get_bone_position(&game, bone::Bone::Head).unwrap();
+    let local_player = internal::get_local_player().unwrap();
+    let bone_pos = local_player.get_bone_position(Bone::Head).unwrap();
     assert!(units_to_m((bone_pos - local_player.origin).length()) < 5.0);
-}
-
-#[test]
-fn get_refdef() {
-    let game = get_game!();
-
-    encryption::get_refdef_pointer(game.addresses.game_base_address).unwrap();
 }

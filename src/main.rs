@@ -1,5 +1,6 @@
 #![feature(iterator_fold_self)]
 #![feature(in_band_lifetimes)]
+#![feature(const_fn)]
 
 use memlib::logger::MinimalLogger;
 use memlib::memory;
@@ -39,11 +40,10 @@ fn run() -> Result<()> {
 
     memlib::system::init().unwrap();
 
-    // Create a game struct from the handle
-    let game = sdk::Game::new(handle)?;
+    sdk::init(handle);
 
     // Run the hack loop
-    hacks::hack_main(game, window)?;
+    hacks::hack_main(window)?;
 
     Ok(())
 }

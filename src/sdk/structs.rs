@@ -36,7 +36,7 @@ pub struct Name
 }
 
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct RefdefView {
     pub tan_half_fov: Vector2,
     unk6: [u8; 0xC],
@@ -44,7 +44,7 @@ pub struct RefdefView {
 }
 
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct RefDef {
     pub x: i32,
     pub y: i32,

@@ -7,9 +7,9 @@ use rand::{RngCore, SeedableRng};
 
 use crate::config::Config;
 use crate::hacks::aimbot::AimbotContext;
-use crate::sdk::{Game, Player, units_to_m, GameInfo};
+use crate::sdk::{Player, units_to_m, GameInfo};
 use crate::sdk::bone::Bone;
-use crate::sdk::structs::CharacterStance;
+use crate::sdk::CharacterStance;
 use serde::{Serialize, Deserialize};
 
 use imgui;
@@ -54,10 +54,6 @@ impl EspConfig {
     }
 }
 
-pub struct EspContext {
-    highlighted_player: i32
-}
-
 pub fn esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &Config, aimbot_context: &AimbotContext) {
     let esp_config = &config.esp_config;
 
@@ -65,40 +61,47 @@ pub fn esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &Config, aimbo
         return
     }
 
-    let mut players = game_info.players.clone();
-    let local_origin = &game_info.local_position;
-    // sort players
-    // players.sort_by(|a, b|
-    //     (a.origin - local_origin).length().partial_cmp(
-    //         &(b.origin - local_origin).length()).unwrap_or(Ordering::Equal));
-    // players.reverse()
-    // ;
+    let mut players: Vec<_> = game_info.players.iter()
+        .filter(|&player| {
+            // Check if local player
+            if player.id == game_info.local_index {
+                return false;
+            }
 
-    for player in &players {
-        if player.id == game_info.local_player.id {
-            continue;
-        }
-        if !esp_config.teams && player.is_teammate(&game_info, &config.friends) {
-            continue;
-        }
-        let distance = units_to_m((game_info.local_player.origin - player.origin).length());
-        if distance > 350.0 {
-            continue;
-        }
+            // Check if teammate
+            if !esp_config.teams && player.is_teammate(&game_info, &config.friends) {
+                return false;
+            }
+
+            let distance = units_to_m((game_info.get_local_player().origin - player.origin).length());
+            if distance > esp_config.max_distance {
+                return false;
+            }
+
+            true
+        })
+        .collect();
+
+    players.sort_by(|a, b|
+        (b.origin - game_info.camera_pos).length().partial_cmp(
+            &(a.origin - game_info.camera_pos).length()).unwrap_or(Ordering::Equal));
+
+    for &player in &players {
         let highlighted = player.id == aimbot_context.aim_lock_player_id.unwrap_or(-1);
-        draw_esp(&game_info, overlay, &esp_config, player, highlighted);
+        draw_esp(
+            overlay,
+            &player,
+            &esp_config,
+            units_to_m((player.origin - game_info.get_local_player().origin).length()),
+            highlighted
+        );
     }
 }
 
-pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfig, player: &Player, highlighted: bool) {
+fn draw_esp(overlay: &mut impl Draw, player: &Player, config: &EspConfig, distance: f32, highlighted: bool) {
     use memlib::overlay::*;
 
-    let distance = units_to_m((game_info.local_player.origin - player.origin).length());
-    if distance > config.max_distance {
-        return;
-    }
-
-    let bbox = unwrap_or_return!(player.get_bounding_box(&game_info.game));
+    let bbox = unwrap_or_return!(player.get_bounding_box());
 
     let left_x = bbox.0.x;
     let bottom_y = bbox.0.y;
@@ -110,28 +113,16 @@ pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfi
 
     // outline
     overlay.draw_box(
-        Vector2 {
-            x: left_x,
-            y: bottom_y,
-        },
-        Vector2 {
-            x: right_x,
-            y: top_y,
-        },
+        (left_x, bottom_y).into(),
+        (right_x, top_y).into(),
         BoxOptions::default()
             .color(Color::from_rgb(0, 0, 0).opacity(config.opacity))
             .width(3.0)
     );
     // bbox
     overlay.draw_box(
-        Vector2 {
-            x: left_x,
-            y: bottom_y,
-        },
-        Vector2 {
-            x: right_x,
-            y: top_y,
-        },
+        (left_x, bottom_y).into(),
+        (right_x, top_y).into(),
         BoxOptions::default()
             .color(if highlighted { config.highlighted_box_color } else { config.box_color }.opacity(config.opacity))
     );
@@ -204,17 +195,19 @@ pub fn draw_esp(game_info: &GameInfo, overlay: &mut impl Draw, config: &EspConfi
         // draw_flag(&format!("{}", player.team), team_color.opacity(config.opacity));
     }
 
+    /*
     if config.skeleton {
-        draw_skeleton(&game_info.game, overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
-    }
+        draw_skeleton(overlay, &player, Color::from_rgb(255, 255, 255).opacity(config.opacity), 1.0);
+    }*/
 }
 
-pub fn draw_skeleton(game: &Game, overlay: &mut impl Draw, player: &Player, color: Color, thickness: f32) {
+/*
+pub fn draw_skeleton(overlay: &mut impl Draw, player: &Player, color: Color, thickness: f32) {
     use memlib::overlay::*;
 
     for (bone1, bone2) in crate::sdk::bone::BONE_CONNECTIONS {
-        let pos1 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, *bone1).ok())));
-        let pos2 = unwrap_or_return!(game.world_to_screen(&unwrap_or_return!(player.get_bone_position(&game, *bone2).ok())));
+        let pos1 = unwrap_or_return!(world_to_screen(&unwrap_or_return!(player.get_bone_position(*bone1).ok())));
+        let pos2 = unwrap_or_return!(world_to_screen(&unwrap_or_return!(player.get_bone_position(*bone2).ok())));
         overlay.draw_line(pos1, pos2, LineOptions::default().color(color).width(thickness));
     }
 
@@ -223,3 +216,4 @@ pub fn draw_skeleton(game: &Game, overlay: &mut impl Draw, player: &Player, colo
     let head_pos = unwrap_or_return!(game.world_to_screen(&(unwrap_or_return!(player.get_bone_position(&game, Bone::Head).ok()) + trans)));
     overlay.draw_circle(head_pos, 2.5, CircleOptions::default().color(color));
 }
+ */
