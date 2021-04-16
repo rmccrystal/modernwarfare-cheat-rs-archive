@@ -32,6 +32,7 @@ pub struct EspConfig {
     #[imgui(checkbox(label = "ESP teams"))]
     teams: bool,
     opacity: u8,
+    #[imgui(checkbox(label = "Skeleton"))]
     skeleton: bool,
     #[imgui(slider(min = 0.0, max = 500.0, label = "ESP extra info cutoff"))]
     extra_info_distance: f32,
