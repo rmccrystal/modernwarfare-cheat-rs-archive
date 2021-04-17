@@ -42,10 +42,24 @@ pub fn hack_main(window: Window) -> Result<()> {
 
     update_addresses_interval(Duration::from_secs(2));
 
-    let mut timer = LoopTimer::new(crate::CHEAT_TICKRATE);
-
     start_overlay_thread(window);
     no_recoil::start_no_recoil_thread();
+
+    loop {
+        let result = std::panic::catch_unwind(hack_loop);
+        if let Err(e) = result {
+            error!("Panic in hack_loop: {:?}", e);
+            continue;
+        } else {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
+fn hack_loop() {
+    let mut timer = LoopTimer::new(crate::CHEAT_TICKRATE);
 
     loop {
         update_addresses_interval(Duration::from_secs(2));

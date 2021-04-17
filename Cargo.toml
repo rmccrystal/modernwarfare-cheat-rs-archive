@@ -10,7 +10,7 @@ edition = "2018"
 [dependencies]
 memlib = { path = "../memlib-rs" }
 win_key_codes = "0.1.2"
-log = "*"
+log = { version = "*", features = ["release_max_level_info"] }
 lazy_static = "*"
 cxx = "0.4.2"
 rand = { version = "0.7.3", features = ["small_rng"] }

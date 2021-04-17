@@ -18,7 +18,7 @@ pub struct AimbotConfig {
     pub fov: f32,
     // FOV in degrees
     #[imgui(slider(min = 0.5, max = 25.0, label = "Aimbot Smooth"))]
-    pub smooth: f32,
+    pub speed: f32,
     // 1 is instant, 1+ is smooth
     pub keybind: Keybind,
     #[imgui(checkbox(label = "Aimbot aimlock"))]
@@ -40,7 +40,7 @@ impl AimbotConfig {
             teams: true,
             bone: Bone::Head,
             fov: 30.0,
-            smooth: 2.0,
+            speed: 2.0,
             keybind: Keybind::WhilePressed(vec![win_key_codes::VK_XBUTTON1]),
             aim_lock: true,
             distance_limit: 400.0,
@@ -129,12 +129,14 @@ fn get_target<'a>(game_info: &'a GameInfo, config: &AimbotConfig, ctx: &AimbotCo
 
         // first calculate fov to origin so we don't have to run prediction for every player
         let fov_to_origin = math::calculate_relative_angles(&game_info.camera_pos, &player.origin, &game_info.local_view_angles).length();
+        dbg!(fov_to_origin);
         if fov_to_origin * 1.5 > config.fov {
             return None;
         }
 
         let aim_position = get_aim_position(&player, &game_info, &ctx);
-        let angle = math::calculate_relative_angles(&aim_position, &player.origin, &game_info.local_view_angles).length();
+        let angle = math::calculate_relative_angles(&game_info.camera_pos, &aim_position, &game_info.local_view_angles).length();
+        dbg!(angle);
         if angle > config.fov {
             return None;
         }
@@ -150,24 +152,32 @@ fn get_target<'a>(game_info: &'a GameInfo, config: &AimbotConfig, ctx: &AimbotCo
 
 /// Aims at `target`
 fn aim_at(game_info: &GameInfo, player: &Player, target: &Vector3, config: &AimbotConfig) {
-    let delta = math::calculate_relative_angles(&game_info.camera_pos, &target, &game_info.local_view_angles);
+    let absolute_delta = math::calculate_relative_angles(&game_info.camera_pos, &target, &game_info.local_view_angles);
 
     info!("Aiming at {}\t({}m)\t({}°)\t({})\t({:?})",
           player.name,
           units_to_m((target - game_info.camera_pos).length()),
-          delta.length(),
+          absolute_delta.length(),
           player.health,
           player.stance
     );
 
-    let new_delta = delta / ((config.smooth / 2.0) * crate::CHEAT_TICKRATE as f32);
+    let fov_multiplier = 120.0 / get_fov();
+    let tickrate_multiplier = (crate::CHEAT_TICKRATE as f32) / 120.0;
+    let speed_multiplier = config.speed;
+    let scale = 1.0 / 2.5;
 
-    let mouse_multiplier = 250.0;
-    let dx = -new_delta.yaw * mouse_multiplier;
-    let dy = new_delta.pitch * mouse_multiplier;
+    dbg!(absolute_delta);
+    let multiplier = fov_multiplier * tickrate_multiplier * speed_multiplier;
+    dbg!(multiplier);
 
-    let dx = dx.ceil() as i32;
-    let dy = dy.ceil() as i32;
+    let scaled_delta = absolute_delta * (multiplier * scale);
+    dbg!(scaled_delta);
+
+    let dx = -scaled_delta.yaw.ceil() as i32;
+    let dy = scaled_delta.pitch.ceil() as i32;
+
+    dbg!(dx, dy);
 
     system::move_mouse_relative(dx, dy);
 }

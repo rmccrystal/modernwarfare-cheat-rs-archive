@@ -59,7 +59,8 @@ pub fn get_camera_angles() -> Option<Angles2> {
 
 // Gets the local player by finding the closest player to the camera
 pub fn find_local_index(players: &[Player], camera_pos: &Vector3) -> Option<i32> {
-    if players.len() == 0 {
+    if players.is_empty() {
+        debug!("Could not find local index, players is empty");
         return None;
     }
 
@@ -69,7 +70,7 @@ pub fn find_local_index(players: &[Player], camera_pos: &Vector3) -> Option<i32>
             (player, distance)
         })
         .filter(|(_, distance)| *distance < 5.0)
-        .min_by_key(|&(_, distance)| (distance * 1000.0) as i32)
+        .min_by_key(|&(_, distance)| (distance) as i32)
         .map(|(player, _)| player.id)
 }
 

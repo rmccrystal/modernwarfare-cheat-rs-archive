@@ -3,18 +3,24 @@
 use memlib::memory::{Address, OffsetDefinition, dump_offsets};
 use serde::de::IntoDeserializer;
 
-pub const REFDEF: Address = 0x16C1D290;
+// 48 8D 15 ? ? ? ? 33 15 ? ? ? ? F3 0F 10 73 ?
+pub const REFDEF: Address = 0x16D16290;
 
-pub const NAME_ARRAY: Address = 0x16C28358;
+// 48 8D 0D ? ? ? ? 48 8B 0C C1 48 8B 01 FF 90 ? ? ? ?
+// (last qword)
+pub const NAME_ARRAY: Address = 0x16D21358;
 pub const NAME_LIST_OFFSET: Address = 0x4C70;
 
-pub const CAMERA_POINTER: Address = 0x13A04E40;
+// 48 8B 05 ? ? ? ? 48 8B 7C 24 ? 48 05 ? ? ? ?
+pub const CAMERA_POINTER: Address = 0x13AFDE40;
 pub const CAMERA_OFFSET: Address = 0x1D8;
 
-pub const LOCAL_INDEX_POINTER: Address = 0x28ED8;
+// 48 83 BB ? ? ? ? ? 0F 84 ? ? ? ? 48 89 B4 24 ? ? ? ?
+pub const LOCAL_INDEX_POINTER: Address = 0xF478;
 pub const LOCAL_INDEX_OFFSET: Address = 0x1F4;
 
-pub const NO_RECOIL: Address = 0x337E8;
+// 4C 8D 96 ? ? ? 00 B3 01
+pub const NO_RECOIL: Address = 0x144;
 
 pub const UNIT_SCALE: f32 = 0.025400;
 
@@ -30,13 +36,28 @@ pub mod entity {
 pub mod character_info {
     use memlib::memory::Address;
 
-    pub const SIZE: usize = 0x3A90;
-    pub const VALID: Address = 0x168;
-    pub const POS_PTR: Address = 0x78;
-    pub const TEAM: Address = 0x1324;
-    pub const STANCE: Address = 0xB80;
-    pub const DEAD_1: Address = 0x80C;
-    pub const DEAD_2: Address = 0xA0;
+    // 48 69 D3 ?? ?? ?? ?? 48 03 96 ?? ?? ?? ??
+    pub const SIZE: usize = 0x3AA0;
+
+    // C7 87 ?? ?? ?? ?? ?? ?? ?? ?? C7 87 ?? ?? ?? ?? ?? ?? ?? ?? 41
+    pub const VALID: Address = 0x6E0;
+
+    // 49 8B D9 41 0F B6 F0 8B F9 48 8B EA
+    // Jump to CMP
+    pub const POS_PTR: Address = 0x30E0;
+
+    // 8B 87 ? ? ? ? 4C 8B BC 24 ? ? ? ? 4C 8B B4 24 ? ? ? ? 4C 8B AC 24 ? ? ? ? 4C 8B A4 24 ? ? ? ? 85 C0 74 16
+    pub const TEAM: Address = 0x308C;
+
+    // 83 BF ? ? ? ? ? 75 0A F3 0F 10 35 ? ? ? ? EB 08
+    pub const STANCE: Address = 0x32A0;
+
+    // C7 83 ? ? ? ? ? ? ? ? C7 83 ? ? ? ? ? ? ? ? E8 ? ? ? ? 44 0F B6 C6 48 8B D5 48 8B CF E8 ? ? ? ?
+    pub const DEAD_1: Address = 0x3148;
+
+    // 41 83 B8 ? ? ? ? ? 0F 85 ? ? ? ? 41 B8 ? ? ? ?
+    pub const DEAD_2: Address = 0x2CC;
+
     // not working
     pub const ADS: Address = 0xBD4;
     // not working
@@ -46,19 +67,23 @@ pub mod character_info {
 pub mod client_info {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x16C1A908;
+    // 48 8B 1D ? ? ? ? C6 44 24 ? ? 0F B6 44 24 ?
+    pub const ENCRYPTED_PTR: Address = 0x16D13908;
 }
 
 pub mod client_base {
     use memlib::memory::Address;
 
+    // 48 8B 83 ?? ?? ?? ?? C6 44 24 ?? ?? 0F B6
     pub const BASE_OFFSET: Address = 0x98CF8;
 }
 
 pub mod bones {
     use memlib::memory::Address;
 
-    pub const ENCRYPTED_PTR: Address = 0x14A89A98;
+    // 0F BF B4 ? ? ? ? ? 89 ? 24 ? 85 ?
+    // points to decryption, encrypted_ptr is in mov r8, cs:qword_
+    pub const ENCRYPTED_PTR: Address = 0x14B82A18;
     pub const BASE_POS: Address = 0x1F86C;
     pub const INDEX_STRUCT_SIZE: usize = 0x150;
 }
@@ -72,7 +97,7 @@ pub fn get_sigs() -> Vec<OffsetDefinition> {
             index: 0,
             offset: 131,
             dword: true,
-            rip_relative: false
+            rip_relative: false,
         },
         OffsetDefinition {
             sig: "83 BF ? ? ? ? ? 75 0A F3 0F 10 35 ? ? ? ? EB 08".to_string(),
@@ -80,7 +105,7 @@ pub fn get_sigs() -> Vec<OffsetDefinition> {
             index: 0,
             offset: 130,
             dword: true,
-            rip_relative: false
+            rip_relative: false,
         },
         OffsetDefinition {
             sig: "C7 83 ? ? ? ? ? ? ? ? C7 83 ? ? ? ? ? ? ? ? E8 ? ? ? ? 44 0F B6 C6 48 8B D5 48 8B CF E8 ? ? ? ?".to_string(),
@@ -88,7 +113,7 @@ pub fn get_sigs() -> Vec<OffsetDefinition> {
             index: 0,
             offset: 130,
             dword: true,
-            rip_relative: false
+            rip_relative: false,
         },
         OffsetDefinition {
             sig: "41 83 B8 ? ? ? ? ? 0F 85 ? ? ? ? 41 B8 ? ? ? ?".to_string(),
@@ -96,7 +121,7 @@ pub fn get_sigs() -> Vec<OffsetDefinition> {
             index: 0,
             offset: 131,
             dword: true,
-            rip_relative: false
+            rip_relative: false,
         },
         OffsetDefinition {
             sig: "8B 87 ? ? ? ? 4C 8B BC 24 ? ? ? ? 4C 8B B4 24 ? ? ? ? 4C 8B AC 24 ? ? ? ? 4C 8B A4 24 ? ? ? ? 85 C0 74 16".to_string(),
@@ -104,17 +129,31 @@ pub fn get_sigs() -> Vec<OffsetDefinition> {
             index: 0,
             offset: 130,
             dword: true,
-            rip_relative: false
+            rip_relative: false,
         }
     ]
 }
 
 #[cfg(test)]
 mod tests {
-    use memlib::memory::{Handle, dump_offsets, offset_definition_from_sig};
+    use memlib::memory::{Handle, dump_offsets, offset_definition_from_sig, find_offset};
     use memlib::logger::MinimalLogger;
     use log::LevelFilter;
     use crate::sdk::offsets::get_sigs;
+
+    #[test]
+    fn print_offsets() -> anyhow::Result<()> {
+        let _ = MinimalLogger::init(LevelFilter::Info);
+
+        let handle = Handle::new("ModernWarfare.exe")?;
+        let module = handle.get_module("ModernWarfare.exe").unwrap();
+        let buf = handle.dump_memory(module.get_memory_range());
+
+        let offsets = get_sigs();
+        println!("{}", dump_offsets(&buf, &offsets));
+
+        Ok(())
+    }
 
     #[test]
     fn generate_offset_defs() -> anyhow::Result<()> {

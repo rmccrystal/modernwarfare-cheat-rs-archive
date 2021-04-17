@@ -27,7 +27,7 @@ pub struct Player {
     pub ads: bool,
     pub reloading: bool,
     pub base_address: Address,
-    // pub bones: HashMap<Bone, Vector3> // TODO
+    pub bones: HashMap<Bone, Vector3> // TODO
 }
 
 impl Player {
@@ -86,6 +86,7 @@ impl Player {
             reloading,
             health: name_struct.health,
             base_address,
+            bones: HashMap::new()
         })
     }
 
@@ -99,21 +100,21 @@ impl Player {
         game_info.get_local_player().team == self.team
     }
 
-    pub fn get_bone_position(&self, bone: Bone) -> Result<Vector3> {
-        let pos = bone::get_bone_position(self.id, unsafe { std::mem::transmute(bone) })?;
-        let distance_from_origin = crate::sdk::units_to_m((pos - self.origin).length());
-        if distance_from_origin > 2.0 {
-            warn!("bone {:?} ({}) {}m away from {}'s origin was read ({:?})", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name, pos);
-            bail!("Bone was too far away from player body");
-        }
-        Ok(pos)
+    pub fn get_bone_position(&self, bone: Bone) -> Option<&Vector3> {
+        self.bones.get(&bone)
+        // let pos = bone::get_bone_position(self.id, unsafe { std::mem::transmute(bone) })?;
+        // let distance_from_origin = crate::sdk::units_to_m((pos - self.origin).length());
+        // if distance_from_origin > 2.0 {
+        //     warn!("bone {:?} ({}) {}m away from {}'s origin was read ({:?})", bone, unsafe { std::mem::transmute::<Bone, i32>(bone) }, distance_from_origin, self.name, pos);
+        //     bail!("Bone was too far away from player body");
+        // }
+        // Ok(pos)
     }
 
     pub fn get_head_position(&self) -> Vector3 {
         match self.get_bone_position(Bone::Head) {
-            Ok(pos) => pos,
-            Err(err) => {
-                // warn!("Error getting head bone position for {}: {}; using fallback", self.name, err);
+            Some(pos) => *pos,
+            None => {
                 self.estimate_head_position()
             }
         }
@@ -176,7 +177,7 @@ impl Player {
 
     pub fn estimate_head_position(&self) -> Vector3 {
         let delta_z = match self.stance {
-            CharacterStance::Standing => 60.0,
+            CharacterStance::Standing => 58.0,
             CharacterStance::Crouching => 40.0,
             CharacterStance::Crawling => 10.0,
             CharacterStance::Downed => 20.0,
@@ -188,7 +189,7 @@ impl Player {
 impl Name {
     pub fn get_name(&self) -> String {
         String::from_utf8(self.name.to_vec())
-            .unwrap_or("".to_string())
+            .unwrap_or_else(|_| "".to_string())
             .trim_matches(char::from(0))
             .to_string()
     }

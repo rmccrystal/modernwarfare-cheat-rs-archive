@@ -11,7 +11,7 @@ pub fn start_no_recoil_thread() {
     thread::spawn(move || {
         loop {
             if !CONFIG.get_ref().no_recoil_enabled {
-                return
+                continue
             }
             if let Some(base) = crate::sdk::globals::CLIENT_INFO.get_clone() {
                 no_recoil_tick(base);
@@ -27,7 +27,7 @@ fn no_recoil_tick(client_info_base: Address) {
     let mut ecx = edx;
     ecx = Wrapping(ecx.0 ^ r12.0 as u32);
     let mut eax = ecx + Wrapping(2);
-    eax = eax * ecx;
+    eax *= ecx;
     ecx = edx;
     ecx = Wrapping(ecx.0 ^ rsi.0 as u32);
     let address = r12.0;

@@ -9,7 +9,7 @@ use super::globals;
 use serde::{Serialize, Deserialize};
 
 #[repr(u32)]
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, Hash, Eq)]
 pub enum Bone {
     Head = 7,
     Neck = 6,

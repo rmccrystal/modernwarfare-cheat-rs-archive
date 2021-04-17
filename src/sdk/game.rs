@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::*;
 use log::*;
-use memlib::math::{Angles2, Vector2, Vector3};
+use memlib::math::{Angles2, Vector2, Vector3, radians_to_deg};
 use memlib::memory::*;
 
 use crate::sdk::globals::update_addresses_interval;
@@ -35,7 +35,10 @@ impl GameInfo {
     }
 
     pub fn get_local_player(&self) -> &Player {
-        self.get_player_by_id(self.local_index).expect("Could not get local player by index")
+        self.get_player_by_id(self.local_index)
+            .ok_or_else(|| format!("Could not get local player by index in GameInfo. local_index = {}, indexes = {:?}",
+                                   self.local_index, self.players.iter().map(|p| p.id).collect::<Vec<_>>()))
+            .unwrap()
     }
 }
 
@@ -56,8 +59,8 @@ pub fn init(handle: Handle) -> Result<()> {
 pub fn get_game_info() -> Result<GameInfo> {
     let local_view_angles = internal::get_camera_angles().ok_or_else(|| anyhow!("Could not get local view angles"))?;
     let local_position = internal::get_camera_position().ok_or_else(|| anyhow!("Could not get camera pos"))?;
-    let local_index = internal::get_local_index().ok_or_else(|| anyhow!("Could not get local index"))?;
     let players = internal::get_players().ok_or_else(|| anyhow!("Could not get players"))?;
+    let local_index = internal::find_local_index(&players, &local_position).ok_or_else(|| anyhow!("Could not get local index"))?;
 
     Ok(GameInfo {
         local_view_angles,
@@ -65,6 +68,11 @@ pub fn get_game_info() -> Result<GameInfo> {
         local_index,
         players,
     })
+}
+
+pub fn get_fov() -> f32 {
+    let refdef = globals::REFDEF.get().expect("get_fov called without refdef").read();
+    radians_to_deg(f32::atan(refdef.view.tan_half_fov.length()) * 2.0)
 }
 
 pub fn world_to_screen(world_pos: &Vector3) -> Option<Vector2> {
@@ -81,9 +89,9 @@ pub fn world_to_screen(world_pos: &Vector3) -> Option<Vector2> {
 
 // Converts units to in game meters
 pub fn units_to_m(units: f32) -> f32 {
-    units / offsets::UNIT_SCALE
+    units * offsets::UNIT_SCALE
 }
 
 pub fn m_to_units(meters: f32) -> f32 {
-    meters * offsets::UNIT_SCALE
+    meters / offsets::UNIT_SCALE
 }

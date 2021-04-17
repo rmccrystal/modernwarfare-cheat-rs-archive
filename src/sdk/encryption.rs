@@ -91,6 +91,7 @@ pub fn get_client_info_address(game_base_address: Address) -> Result<Address> {
 
     let decrypted_address = unsafe { ffi::decrypt_client_info(encrypted_address, game_base_address, 0, globals::PEB.get()) };
 
+    trace!("Got 0x{:X} for client_info", decrypted_address);
     sanitize_decrypted_address(decrypted_address)?;
 
     trace!("Found decrypted client_info address: 0x{:X}", decrypted_address);
@@ -108,6 +109,8 @@ pub fn get_client_base_address(game_base_address: Address, client_info_address: 
     trace!("Found encrypted client_info_base address: 0x{:X}", encrypted_address);
 
     let decrypted_address = unsafe { ffi::decrypt_client_base(encrypted_address, game_base_address, 0, globals::PEB.get()) };
+
+    trace!("Got 0x{:X} for client_base", decrypted_address);
 
     sanitize_decrypted_address(decrypted_address)?;
 
@@ -156,7 +159,7 @@ mod tests {
     fn client_info() {
         init();
         let client_info = get_client_info_address(globals::GAME_BASE_ADDRESS.get()).unwrap();
-        info!("client_info: {:X}", client_info)
+        info!("client_info: 0x{:X}", client_info)
     }
 
     #[test]
@@ -164,13 +167,13 @@ mod tests {
         init();
         let client_info = get_client_info_address(globals::GAME_BASE_ADDRESS.get()).unwrap();
         let client_base = get_client_base_address(globals::GAME_BASE_ADDRESS.get(), client_info).unwrap();
-        info!("client_base: {:X}", client_base)
+        info!("client_base: 0x{:X}", client_base)
     }
 
     #[test]
     fn bone_base() {
         init();
         let bone_base = get_bone_base_address(globals::GAME_BASE_ADDRESS.get()).unwrap();
-        info!("bone_base: {:X}", bone_base);
+        info!("bone_base: 0x{:X}", bone_base);
     }
 }
