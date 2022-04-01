@@ -1,1 +1,1 @@
-# This repository has been archived
+# This repository has been archived for legal reasons
